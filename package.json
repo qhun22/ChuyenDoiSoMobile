@@ -11,11 +11,13 @@
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
+    "@marsidev/react-turnstile": "^1.6.1",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260922.1",
     "@opennextjs/cloudflare": "^1.20.6",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

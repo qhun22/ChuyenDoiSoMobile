@@ -126,10 +126,12 @@ export default function Header() {
       <div className="flex md:hidden items-center justify-between px-3 py-2 border-b border-slate-100">
         <button
           onClick={() => setIsDrawerOpen(true)}
-          className="p-1.5 text-2xl text-slate-700"
+          className="p-1.5 text-slate-700"
           aria-label="Mở menu"
         >
-          <i className="ri-menu-line"></i>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
         <Link href="/" className="relative h-10 w-36">
           <Image
@@ -142,14 +144,16 @@ export default function Header() {
         </Link>
         <button
           onClick={() => setIsSearchOpen(true)}
-          className="p-1.5 text-2xl text-slate-700"
+          className="p-1.5 text-slate-700"
           aria-label="Tìm kiếm"
         >
-          <i className="ri-search-line"></i>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </button>
       </div>
 
-{/* ================= THANH HEADER PC (> 768px) ================= */}
+      {/* ================= THANH HEADER PC (> 768px) ================= */}
       <div className="hidden md:block border-b border-gray-100 py-2.5 bg-white">
         <div className="max-w-[1240px] mx-auto px-4 flex items-center justify-between gap-6">
           
@@ -164,7 +168,7 @@ export default function Header() {
             />
           </Link>
 
-          {/* 2. Ô tìm kiếm chuẩn gọn - khoảng cách 2 bên vừa khít */}
+          {/* 2. Ô tìm kiếm chuẩn gọn */}
           <div ref={searchBoxRef} className="relative w-[500px] shrink-0">
             <form
               onSubmit={handleSearchSubmit}
@@ -181,10 +185,12 @@ export default function Header() {
               />
               <button
                 type="submit"
-                className="bg-[#b8001f] hover:bg-[#99001a] h-full px-5 text-white flex items-center justify-center transition shrink-0"
+                className="bg-[#b8001f] hover:bg-[#99001a] h-full px-5 text-white flex items-center justify-center transition shrink-0 cursor-pointer"
                 aria-label="Tìm kiếm"
               >
-                <i className="ri-search-line text-base font-semibold"></i>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </button>
             </form>
 
@@ -219,12 +225,14 @@ export default function Header() {
             )}
           </div>
 
-          {/* 3. 4 Nút chức năng bên phải - Dàn rộng gap-8 giúp cân bằng khoảng cách */}
-          <div className="flex items-center gap-8 text-gray-700 shrink-0">
+          {/* 3. 4 Nút chức năng bên phải */}
+          <div className="flex items-center gap-8 text-gray-700 shrink-0 select-none">
             {/* 1. Yêu thích */}
             <Link href="/profile" className="flex items-center gap-2 hover:text-[#b8001f] transition group">
-              <div className="relative text-[22px] leading-none text-gray-700 group-hover:text-[#b8001f]">
-                <i className="ri-heart-line"></i>
+              <div className="relative leading-none text-gray-700 group-hover:text-[#b8001f]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
                 <span className="absolute -top-1 -right-1.5 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-[#b8001f] text-[9px] font-bold text-white leading-none">
                   {counts.wishlist}
                 </span>
@@ -237,8 +245,10 @@ export default function Header() {
 
             {/* 2. Giỏ hàng */}
             <Link href="/cart" className="flex items-center gap-2 hover:text-[#b8001f] transition group">
-              <div className="relative text-[22px] leading-none text-gray-700 group-hover:text-[#b8001f]">
-                <i className="ri-shopping-cart-2-line"></i>
+              <div className="relative leading-none text-gray-700 group-hover:text-[#b8001f]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
                 <span className="absolute -top-1 -right-1.5 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-[#b8001f] text-[9px] font-bold text-white leading-none">
                   {counts.cart}
                 </span>
@@ -251,8 +261,10 @@ export default function Header() {
 
             {/* 3. Tra cứu đơn */}
             <Link href="/checkout" className="flex items-center gap-2 hover:text-[#b8001f] transition group">
-              <div className="relative text-[22px] leading-none text-gray-700 group-hover:text-[#b8001f]">
-                <i className="ri-survey-line"></i>
+              <div className="relative leading-none text-gray-700 group-hover:text-[#b8001f]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
                 <span className="absolute -top-1 -right-1.5 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-[#b8001f] text-[9px] font-bold text-white leading-none">
                   {counts.order}
                 </span>
@@ -263,10 +275,12 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* 4. Đăng nhập */}
-            <Link href="/login" className="flex items-center gap-2 hover:text-[#b8001f] transition group">
-              <div className="text-[22px] leading-none text-gray-700 group-hover:text-[#b8001f]">
-                <i className="ri-user-line"></i>
+            {/* 4. Đăng nhập - Trỏ thẳng về /login */}
+            <Link href="/login" className="flex items-center gap-2 hover:text-[#b8001f] transition group cursor-pointer">
+              <div className="leading-none text-gray-700 group-hover:text-[#b8001f]">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
               </div>
               <div className="text-[11px] leading-tight">
                 <span className="block text-gray-400 font-normal">Xin chào</span>
@@ -291,8 +305,10 @@ export default function Header() {
                 <div className="relative h-9 w-32">
                   <Image src="/logos/sean.gif" alt="QHUN22" fill className="object-contain" />
                 </div>
-                <button onClick={() => setIsDrawerOpen(false)} className="text-2xl text-slate-500 p-1">
-                  <i className="ri-close-line"></i>
+                <button onClick={() => setIsDrawerOpen(false)} className="text-slate-500 p-1">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
 
@@ -306,28 +322,40 @@ export default function Header() {
                   onClick={() => setIsDrawerOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-700 hover:bg-slate-50"
                 >
-                  <i className="ri-home-5-line text-lg"></i> Trang chủ
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  Trang chủ
                 </Link>
                 <Link
                   href="/cart"
                   onClick={() => setIsDrawerOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-700 hover:bg-slate-50"
                 >
-                  <i className="ri-shopping-cart-2-line text-lg"></i> Giỏ hàng
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Giỏ hàng
                 </Link>
                 <Link
                   href="/checkout"
                   onClick={() => setIsDrawerOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-700 hover:bg-slate-50"
                 >
-                  <i className="ri-file-list-3-line text-lg"></i> Tra cứu đơn
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Tra cứu đơn
                 </Link>
                 <Link
                   href="/login"
                   onClick={() => setIsDrawerOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-slate-700 hover:bg-slate-50"
                 >
-                  <i className="ri-login-box-line text-lg"></i> Đăng nhập
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  Đăng nhập
                 </Link>
               </nav>
             </div>
@@ -343,8 +371,10 @@ export default function Header() {
       {isSearchOpen && (
         <div className="fixed inset-0 z-50 bg-white flex flex-col h-full">
           <div className="flex items-center gap-2 border-b p-3">
-            <button onClick={() => setIsSearchOpen(false)} className="text-2xl text-slate-600 p-1">
-              <i className="ri-arrow-left-line"></i>
+            <button onClick={() => setIsSearchOpen(false)} className="text-slate-600 p-1">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
             </button>
             <form onSubmit={handleSearchSubmit} className="flex-1 flex items-center">
               <input
@@ -355,8 +385,10 @@ export default function Header() {
                 placeholder="Nhập sản phẩm bạn cần tìm..."
                 className="w-full text-sm outline-none px-2 text-slate-800"
               />
-              <button type="submit" className="text-xl text-[#b8001f] p-1">
-                <i className="ri-search-2-line"></i>
+              <button type="submit" className="text-[#b8001f] p-1">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </button>
             </form>
           </div>
@@ -412,14 +444,19 @@ export default function Header() {
                           className="flex items-center justify-between py-2 text-xs text-slate-700 cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
-                            <i className="ri-history-line text-slate-400"></i> {rec}
+                            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {rec}
                           </span>
                           <button
                             type="button"
                             onClick={(e) => removeRecent(e, rec)}
                             className="text-slate-400 hover:text-red-500"
                           >
-                            <i className="ri-close-line"></i>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                           </button>
                         </li>
                       ))}
@@ -439,9 +476,9 @@ export default function Header() {
                           setIsSearchOpen(false);
                           router.push(`/products?q=${encodeURIComponent(tag)}`);
                         }}
-                        className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700"
+                        className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700 flex items-center gap-1 cursor-pointer"
                       >
-                        <i className="ri-fire-line text-red-500 mr-1"></i> {tag}
+                        <span className="text-red-500">🔥</span> {tag}
                       </button>
                     ))}
                   </div>

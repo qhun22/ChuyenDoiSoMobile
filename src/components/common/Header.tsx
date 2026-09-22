@@ -287,7 +287,7 @@ export default function Header() {
             <div>
               <div className="flex items-center justify-between border-b pb-4">
                 <div className="relative h-9 w-32">
-                  <Image src="/icons/sean.gif" alt="QHUN22" fill className="object-contain" />
+                  <Image src="/logos/sean.gif" alt="QHUN22" fill className="object-contain" />
                 </div>
                 <button onClick={() => setIsDrawerOpen(false)} className="text-2xl text-slate-500 p-1">
                   <i className="ri-close-line"></i>

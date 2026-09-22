@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function AdminProductsPage() { return <main className="store-shell admin-shell"><section className="home-section"><p className="eyebrow">Admin / Products</p><div className="section-heading"><h1>San pham</h1><Link className="primary-button" href="/dashboard/products/add">Them san pham</Link></div><p>Quan ly ten, gia, ton kho va cau hinh san pham.</p></section></main>; }

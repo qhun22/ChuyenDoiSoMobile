@@ -1,0 +1,1 @@
+export default function AdminExportPage() { return <main className="store-shell admin-shell"><section className="home-section"><p className="eyebrow">Admin / Reports</p><h1>Xuat bao cao</h1><p>Chon loai du lieu va khoang thoi gian de tai file Excel.</p><button className="primary-button" type="button">Tao bao cao</button></section></main>; }

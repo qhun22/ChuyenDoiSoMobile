@@ -1,0 +1,3 @@
+import Link from "next/link";
+
+export default async function BlogDetailPage({ params }: { params: Promise<{ slug: string }> }) { const { slug } = await params; return <main className="store-shell"><article className="home-section"><p className="eyebrow">Blog / {slug}</p><h1>{slug.replaceAll("-", " ")}</h1><p className="hero-copy">Nhung thong tin thuc te, ngan gon va de ap dung de ban su dung thiet bi di dong hieu qua hon moi ngay.</p><p>Noi dung bai viet se duoc dong bo tu he thong Django CMS trong phien ban tiep theo.</p><Link className="primary-button" href="/blog">Quay lai blog</Link></article></main>; }

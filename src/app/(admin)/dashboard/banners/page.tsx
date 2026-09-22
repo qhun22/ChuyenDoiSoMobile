@@ -1,0 +1,1 @@
+export default function AdminBannersPage() { return <main className="store-shell admin-shell"><section className="home-section"><p className="eyebrow">Admin / Banners</p><h1>Banner images</h1><p>Quan ly hinh anh banner hien thi tren trang chu.</p></section></main>; }

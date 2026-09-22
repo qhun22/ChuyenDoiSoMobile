@@ -1,0 +1,1 @@
+export default function AdminReviewsPage() { return <main className="store-shell admin-shell"><section className="home-section"><p className="eyebrow">Admin / Reviews</p><h1>Duyet danh gia</h1><p>Xem va phe duyet cac danh gia dang cho xu ly.</p></section></main>; }

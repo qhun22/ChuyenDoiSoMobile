@@ -1,0 +1,1 @@
+export default function ForgotPasswordPage() { return <main className="store-shell"><section className="home-section auth-panel"><p className="eyebrow">Account / Recovery</p><h1>Quen mat khau</h1><form className="checkout-form"><label>Email<input type="email" required /></label><button className="primary-button" type="submit">Gui ma xac minh</button></form></section></main>; }

@@ -122,7 +122,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white shadow-sm font-['Signika',sans-serif]">
-      {/* ================= THANH HEADER MOBILE ================= */}
+      {/* ================= THANH HEADER MOBILE (<= 768px) ================= */}
       <div className="flex md:hidden items-center justify-between px-3 py-2 border-b border-slate-100">
         <button
           onClick={() => setIsDrawerOpen(true)}
@@ -131,9 +131,9 @@ export default function Header() {
         >
           <i className="ri-menu-line"></i>
         </button>
-        <Link href="/" className="relative h-9 w-32">
+        <Link href="/" className="relative h-10 w-36">
           <Image
-            src="/logos/sean.gif"
+            src="/icons/sean.gif"
             alt="QHUN22 Mobile"
             fill
             className="object-contain"
@@ -149,13 +149,13 @@ export default function Header() {
         </button>
       </div>
 
-      {/* ================= THANH HEADER PC ================= */}
+      {/* ================= THANH HEADER PC (> 768px) ================= */}
       <div className="hidden md:block border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-6">
-          {/* Logo */}
-          <Link href="/" className="relative h-10 w-44 shrink-0">
+        <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-6">
+          {/* Logo shop */}
+          <Link href="/" className="relative h-12 w-48 shrink-0">
             <Image
-              src="/logos/sean.gif"
+              src="/icons/sean.gif"
               alt="QHUN22 Mobile"
               fill
               className="object-contain"
@@ -163,31 +163,34 @@ export default function Header() {
             />
           </Link>
 
-          {/* Form tìm kiếm PC + Autocomplete */}
-          <div ref={searchBoxRef} className="relative flex-1 max-w-xl">
-            <form onSubmit={handleSearchSubmit} className="relative">
+          {/* Ô tìm kiếm viền đỏ chuẩn Django cũ */}
+          <div ref={searchBoxRef} className="relative flex-1 max-w-2xl">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="flex items-center rounded-lg border-2 border-[#c8102e] bg-white overflow-hidden"
+            >
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => query.length >= 2 && setShowPcDropdown(true)}
                 placeholder="Nhập sản phẩm mà bạn muốn tìm..."
-                className="w-full rounded-full border border-slate-200 bg-slate-50 py-2.5 pl-4 pr-11 text-sm outline-none transition focus:border-red-600 focus:bg-white"
+                className="w-full px-4 py-2 text-sm text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
                 autoComplete="off"
               />
               <button
                 type="submit"
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-600"
+                className="bg-[#c8102e] hover:bg-[#a60d26] px-6 py-2.5 text-white flex items-center justify-center transition"
                 aria-label="Tìm kiếm"
               >
-                <i className="ri-search-line text-lg"></i>
+                <i className="ri-search-line text-lg font-bold"></i>
               </button>
             </form>
 
-            {/* Dropdown gợi ý sản phẩm PC */}
+            {/* Dropdown gợi ý autocomplete PC */}
             {showPcDropdown && pcSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 rounded-xl border border-slate-100 bg-white p-3 shadow-xl z-50 max-h-96 overflow-y-auto">
-                <div className="text-xs font-bold uppercase text-slate-400 mb-2">Sản phẩm gợi ý</div>
+              <div className="absolute top-full left-0 right-0 mt-1.5 rounded-xl border border-slate-200 bg-white p-3 shadow-2xl z-50 max-h-96 overflow-y-auto">
+                <div className="text-xs font-bold uppercase text-slate-400 mb-2 px-1">Sản phẩm gợi ý</div>
                 {pcSuggestions.map((item) => (
                   <Link
                     key={item.id || item.slug}
@@ -195,7 +198,7 @@ export default function Header() {
                     onClick={() => setShowPcDropdown(false)}
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition"
                   >
-                    <div className="relative h-10 w-10 shrink-0 bg-slate-100 rounded overflow-hidden">
+                    <div className="relative h-11 w-11 shrink-0 bg-slate-100 rounded overflow-hidden">
                       {item.image && (
                         <Image src={item.image} alt={item.name} fill className="object-contain" />
                       )}
@@ -205,7 +208,7 @@ export default function Header() {
                       {item.brand && <div className="text-[11px] text-slate-400">{item.brand}</div>}
                     </div>
                     {item.price && item.price > 0 && (
-                      <div className="text-xs font-bold text-red-600">
+                      <div className="text-xs font-bold text-[#c8102e]">
                         {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}
                       </div>
                     )}
@@ -215,58 +218,58 @@ export default function Header() {
             )}
           </div>
 
-          {/* 4 Icon Actions */}
-          <div className="flex items-center gap-5 text-slate-700">
-            {/* Yêu thích */}
-            <Link href="/profile" className="flex items-center gap-2 hover:text-red-600 transition">
-              <div className="relative text-2xl">
+          {/* 4 Nút chức năng bên phải */}
+          <div className="flex items-center gap-6 text-slate-700">
+            {/* 1. Yêu thích */}
+            <Link href="/profile" className="flex items-center gap-2.5 hover:text-[#c8102e] transition group">
+              <div className="relative text-[26px] leading-none text-slate-700 group-hover:text-[#c8102e]">
                 <i className="ri-heart-line"></i>
-                <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#c8102e] text-[10px] font-bold text-white shadow-sm">
                   {counts.wishlist}
                 </span>
               </div>
-              <div className="text-xs leading-tight">
-                <span className="block text-slate-400">Danh Sách</span>
-                <span className="font-semibold">Yêu thích</span>
+              <div className="text-[11px] leading-tight">
+                <span className="block text-slate-400 font-normal">Danh Sách</span>
+                <span className="font-bold text-slate-700 group-hover:text-[#c8102e]">Yêu thích</span>
               </div>
             </Link>
 
-            {/* Giỏ hàng */}
-            <Link href="/cart" className="flex items-center gap-2 hover:text-red-600 transition">
-              <div className="relative text-2xl">
-                <i className="ri-shopping-cart-2-line"></i>
-                <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+            {/* 2. Giỏ hàng */}
+            <Link href="/cart" className="flex items-center gap-2.5 hover:text-[#c8102e] transition group">
+              <div className="relative text-[26px] leading-none text-slate-700 group-hover:text-[#c8102e]">
+                <i className="ri-shopping-cart-line"></i>
+                <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#c8102e] text-[10px] font-bold text-white shadow-sm">
                   {counts.cart}
                 </span>
               </div>
-              <div className="text-xs leading-tight">
-                <span className="block text-slate-400">Thanh Toán</span>
-                <span className="font-semibold">Giỏ hàng</span>
+              <div className="text-[11px] leading-tight">
+                <span className="block text-slate-400 font-normal">Thanh Toán</span>
+                <span className="font-bold text-slate-700 group-hover:text-[#c8102e]">Giỏ hàng</span>
               </div>
             </Link>
 
-            {/* Tra cứu đơn */}
-            <Link href="/checkout" className="flex items-center gap-2 hover:text-red-600 transition">
-              <div className="relative text-2xl">
+            {/* 3. Tra cứu đơn */}
+            <Link href="/checkout" className="flex items-center gap-2.5 hover:text-[#c8102e] transition group">
+              <div className="relative text-[26px] leading-none text-slate-700 group-hover:text-[#c8102e]">
                 <i className="ri-file-list-3-line"></i>
-                <span className="absolute -top-1 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#c8102e] text-[10px] font-bold text-white shadow-sm">
                   {counts.order}
                 </span>
               </div>
-              <div className="text-xs leading-tight">
-                <span className="block text-slate-400">Kiểm tra</span>
-                <span className="font-semibold">Tra cứu đơn</span>
+              <div className="text-[11px] leading-tight">
+                <span className="block text-slate-400 font-normal">Kiểm tra</span>
+                <span className="font-bold text-slate-700 group-hover:text-[#c8102e]">Tra cứu đơn</span>
               </div>
             </Link>
 
-            {/* Tài khoản */}
-            <Link href="/login" className="flex items-center gap-2 hover:text-red-600 transition">
-              <div className="text-2xl">
-                <i className="ri-user-3-line"></i>
+            {/* 4. Đăng nhập */}
+            <Link href="/login" className="flex items-center gap-2.5 hover:text-[#c8102e] transition group">
+              <div className="text-[26px] leading-none text-slate-700 group-hover:text-[#c8102e]">
+                <i className="ri-user-line"></i>
               </div>
-              <div className="text-xs leading-tight">
-                <span className="block text-slate-400">Xin chào</span>
-                <span className="font-semibold">Đăng nhập</span>
+              <div className="text-[11px] leading-tight">
+                <span className="block text-slate-400 font-normal">Xin chào</span>
+                <span className="font-bold text-slate-700 group-hover:text-[#c8102e]">Đăng nhập</span>
               </div>
             </Link>
           </div>
@@ -283,10 +286,10 @@ export default function Header() {
           <div className="relative z-10 w-72 max-w-[85%] bg-white p-5 shadow-2xl flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between border-b pb-4">
-                <div className="relative h-8 w-28">
-                  <Image src="/logos/sean.gif" alt="QHUN22" fill className="object-contain" />
+                <div className="relative h-9 w-32">
+                  <Image src="/icons/sean.gif" alt="QHUN22" fill className="object-contain" />
                 </div>
-                <button onClick={() => setIsDrawerOpen(false)} className="text-2xl text-slate-500">
+                <button onClick={() => setIsDrawerOpen(false)} className="text-2xl text-slate-500 p-1">
                   <i className="ri-close-line"></i>
                 </button>
               </div>
@@ -328,13 +331,13 @@ export default function Header() {
             </div>
 
             <div className="text-xs text-slate-400 border-t pt-4">
-              Hotline hỗ trợ: <a href="tel:0327221005" className="text-red-600 font-bold">032.722.1005</a>
+              Hotline hỗ trợ: <a href="tel:0327221005" className="text-[#c8102e] font-bold">032.722.1005</a>
             </div>
           </div>
         </div>
       )}
 
-      {/* ================= MOBILE SEARCH PANEL (LIVE SEARCH) ================= */}
+      {/* ================= MOBILE SEARCH PANEL ================= */}
       {isSearchOpen && (
         <div className="fixed inset-0 z-50 bg-white flex flex-col h-full">
           <div className="flex items-center gap-2 border-b p-3">
@@ -348,16 +351,15 @@ export default function Header() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Nhập sản phẩm bạn cần tìm..."
-                className="w-full text-sm outline-none px-2"
+                className="w-full text-sm outline-none px-2 text-slate-800"
               />
-              <button type="submit" className="text-xl text-slate-600 p-1">
+              <button type="submit" className="text-xl text-[#c8102e] p-1">
                 <i className="ri-search-2-line"></i>
               </button>
             </form>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            {/* Nếu đang gõ có kết quả */}
             {query.length >= 2 ? (
               <div>
                 <div className="text-xs font-bold uppercase text-slate-400 mb-2">Kết quả tìm kiếm</div>
@@ -380,7 +382,7 @@ export default function Header() {
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-semibold text-slate-800 truncate">{item.name}</div>
                         {item.price && item.price > 0 && (
-                          <div className="text-[11px] font-bold text-red-600">
+                          <div className="text-[11px] font-bold text-[#c8102e]">
                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.price)}
                           </div>
                         )}
@@ -392,9 +394,7 @@ export default function Header() {
                 )}
               </div>
             ) : (
-              /* Khi chưa gõ: Hiện Lịch sử & Xu hướng */
               <div className="space-y-6">
-                {/* Lịch sử tìm kiếm */}
                 {recentSearches.length > 0 && (
                   <div>
                     <div className="text-xs font-bold uppercase text-slate-400 mb-2">Tìm kiếm gần đây</div>
@@ -425,7 +425,6 @@ export default function Header() {
                   </div>
                 )}
 
-                {/* Xu hướng */}
                 <div>
                   <div className="text-xs font-bold uppercase text-slate-400 mb-2">Xu hướng tìm kiếm</div>
                   <div className="flex flex-wrap gap-2">

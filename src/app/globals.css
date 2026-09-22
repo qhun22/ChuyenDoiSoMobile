@@ -3,7 +3,7 @@
 :root {
 	--ink: #17211f;
 	--muted: #6f7d77;
-	--paper: #f3f0e9;
+	--paper: #ffffff;
 	--lime: #d5f26a;
 	--line: #d6d9d0;
 }
@@ -57,3 +57,29 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
 .site-footer { border-top: 1px solid var(--line); font-family: Arial, sans-serif; font-size: .7rem; margin-top: 60px; padding-left: 32px; padding-right: 32px; text-transform: uppercase; }
 .chat-widget { background: var(--lime); bottom: 22px; font-family: Arial, sans-serif; font-size: .7rem; padding: 13px 16px; position: fixed; right: 22px; text-transform: uppercase; }
 @media (max-width: 700px) { .site-header, .site-footer { padding-left: 18px; padding-right: 18px; } .header-nav { display: none; } .store-shell { padding-left: 18px; padding-right: 18px; } .hero-section { grid-template-columns: 1fr; min-height: 650px; } .hero-device { height: 220px; width: 165px; } .hero-device::before { height: 198px; width: 145px; } .category-grid { grid-template-columns: 1fr; } }
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+@keyframes text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.animate-text-shimmer {
+  animation: text-shimmer 3s ease-in-out infinite;
+}

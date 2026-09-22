@@ -19,14 +19,13 @@ export default function HeroVideoSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
-  // Tự động phát video khi chuyển slide và pause các video còn lại
   useEffect(() => {
     videoRefs.current.forEach((video, index) => {
       if (!video) return;
       if (index === currentSlide) {
         video.currentTime = 0;
         video.play().catch(() => {
-          // Bỏ qua lỗi trình duyệt chặn autoplay nếu có
+          // Bỏ qua lỗi chặn autoplay từ trình duyệt
         });
       } else {
         video.pause();
@@ -48,8 +47,8 @@ export default function HeroVideoSlider() {
 
   return (
     <section className="relative w-full overflow-hidden rounded-2xl bg-black shadow-md">
-      <div className="relative aspect-[16/9] sm:aspect-[21/9] w-full">
-        {/* Danh sách các video slide */}
+      {/* Khống chế chiều cao video chuẩn để đẩy cụm banner vừa sát mép đáy màn hình */}
+      <div className="relative w-full h-[220px] sm:h-[300px] md:h-[370px] lg:h-[405px]">
         {SLIDES.map((slide, index) => (
           <div
             key={slide.id}
@@ -69,36 +68,35 @@ export default function HeroVideoSlider() {
               preload="auto"
               className="h-full w-full object-cover"
             />
-            {/* Lớp phủ tối nhẹ để làm dịu màn hình */}
             <div className="absolute inset-0 bg-black/10" />
           </div>
         ))}
 
-        {/* Nút Prev (Trái) */}
+        {/* Nút Prev - Đứng yên không phóng to khi hover */}
         <button
           type="button"
           onClick={handlePrev}
           aria-label="Slide trước"
-          className="absolute left-3 top-1/2 z-20 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/70 hover:scale-105 active:scale-95"
+          className="absolute left-3 top-1/2 z-20 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/70"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
 
-        {/* Nút Next (Phải) */}
+        {/* Nút Next - Đứng yên không phóng to khi hover */}
         <button
           type="button"
           onClick={handleNext}
           aria-label="Slide sau"
-          className="absolute right-3 top-1/2 z-20 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/70 hover:scale-105 active:scale-95"
+          className="absolute right-3 top-1/2 z-20 -translate-y-1/2 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/70"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
           </svg>
         </button>
 
-        {/* Danh sách chấm tròn điều hướng (Dots) */}
+        {/* Dots điều hướng */}
         <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 gap-2">
           {SLIDES.map((slide, index) => (
             <button

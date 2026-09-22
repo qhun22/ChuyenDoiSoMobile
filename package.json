@@ -3,13 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:cloudflare": "opennextjs-cloudflare build",
-    "deploy:cloudflare": "npm run build:cloudflare && wrangler deploy",
-    "start": "next start",
-    "lint": "eslint"
-  },
+  "dev": "next dev",
+  "build": "opennextjs-cloudflare build",
+  "start": "next start",
+  "lint": "next lint",
+  "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
+},
   "dependencies": {
     "next": "16.3.5",
     "react": "19.2.8",

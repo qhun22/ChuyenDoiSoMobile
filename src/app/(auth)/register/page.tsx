@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function RegisterPage() { return <main className="store-shell"><section className="home-section auth-panel"><p className="eyebrow">Join the store</p><h1>Dang ky</h1><form className="checkout-form"><label>Email<input type="email" required /></label><label>Mat khau<input type="password" required /></label><button className="primary-button" type="submit">Tao tai khoan</button></form><p>Da co tai khoan? <Link href="/login">Dang nhap</Link></p></section></main>; }

@@ -133,7 +133,7 @@ export default function Header() {
         </button>
         <Link href="/" className="relative h-10 w-36">
           <Image
-            src="/icons/sean.gif"
+            src="/logos/sean.gif"
             alt="QHUN22 Mobile"
             fill
             className="object-contain"

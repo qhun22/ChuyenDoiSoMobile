@@ -155,7 +155,7 @@ export default function Header() {
           {/* Logo shop */}
           <Link href="/" className="relative h-12 w-48 shrink-0">
             <Image
-              src="/icons/sean.gif"
+              src="/logos/sean.gif"
               alt="QHUN22 Mobile"
               fill
               className="object-contain"

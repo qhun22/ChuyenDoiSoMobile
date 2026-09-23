@@ -1,7 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { D1Database } from '@cloudflare/workers-types';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 type AddressRow = {
   id: number;
@@ -69,7 +69,13 @@ async function getDatabase() {
   const names = new Set((columns.results ?? []).map((column) => column.name));
   if (!names.has('user_email')) {
     await database.prepare('ALTER TABLE addresses ADD COLUMN user_email TEXT').run();
-    if (names.has('user_id')) await database.prepare('UPDATE addresses SET user_email = user_id WHERE user_email IS NULL').run();
+    if (names.has('user_id')) {
+      await database.prepare('UPDATE addresses SET user_email = (SELECT email FROM users WHERE users.id = addresses.user_id) WHERE user_email IS NULL').run();
+    }
+  }
+  if (!names.has('name')) {
+    await database.prepare('ALTER TABLE addresses ADD COLUMN name TEXT').run();
+    if (names.has('full_name')) await database.prepare('UPDATE addresses SET name = full_name WHERE name IS NULL').run();
   }
   if (!names.has('created_at')) await database.prepare('ALTER TABLE addresses ADD COLUMN created_at DATETIME').run();
   await database.prepare('UPDATE addresses SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL').run();

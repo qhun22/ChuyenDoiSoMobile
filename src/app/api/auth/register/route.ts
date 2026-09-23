@@ -3,7 +3,7 @@ import type { D1Database } from '@cloudflare/workers-types';
 import { verifyTurnstileToken } from '@/lib/turnstile';
 import { addDevUser, createDevAccessToken, findDevUser, setDevAuthCookie } from '@/lib/dev-auth-store';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 type RegisterRequest = {
   email?: string;

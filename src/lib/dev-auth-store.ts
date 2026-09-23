@@ -29,6 +29,13 @@ export function addDevUser(user: Omit<DevAuthUser, 'id'>) {
   return newUser;
 }
 
+export function updateDevUserPassword(email: string, password: string) {
+  const user = findDevUser(email);
+  if (!user) return false;
+  user.password = password;
+  return true;
+}
+
 export function createDevAccessToken(userId: string) {
   return `cf_dev_token_${userId}_${Date.now()}`;
 }

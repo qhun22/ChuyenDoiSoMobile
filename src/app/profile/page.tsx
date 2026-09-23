@@ -91,6 +91,7 @@ export default function ProfilePage() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressPage, setAddressPage] = useState(1);
   const [passwordHistory, setPasswordHistory] = useState<PasswordHistory[]>([]);
+  const [passwordPage, setPasswordPage] = useState(1);
 
   // State theo chuẩn hành chính 2 cấp (Tỉnh -> Xã/Phường)
   const [provinces, setProvinces] = useState<ProvinceItem[]>(DEFAULT_PROVINCES);
@@ -152,7 +153,7 @@ export default function ProfilePage() {
 
   // 1. Tải danh mục Tỉnh/Thành
   useEffect(() => {
-    fetch('https://production.cas.so/address-kit/2025-07-01/provinces')
+    fetch('/api/administrative/provinces')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && Array.isArray(data.provinces) && data.provinces.length > 0) {
@@ -177,7 +178,7 @@ export default function ProfilePage() {
     let isActive = true;
     setIsLoadingCommunes(true);
 
-    fetch(`https://production.cas.so/address-kit/latest/provinces/${selectedProvinceId}/communes`)
+    fetch(`/api/administrative/provinces/${encodeURIComponent(selectedProvinceId)}/communes`)
       .then((res) => {
         if (!res.ok) throw new Error('API error');
         return res.json();
@@ -355,7 +356,10 @@ export default function ProfilePage() {
       return;
     }
     formElement.reset();
-    if (data.historyEntry) setPasswordHistory((currentHistory) => [data.historyEntry!, ...currentHistory]);
+    if (data.historyEntry) {
+      setPasswordHistory((currentHistory) => [data.historyEntry!, ...currentHistory]);
+      setPasswordPage(1);
+    }
     toast.success('Đổi mật khẩu thành công.');
   };
 
@@ -369,7 +373,12 @@ export default function ProfilePage() {
     { length: Math.min(3, totalAddressPages) },
     (_, index) => paginationStart + index,
   );
-
+  const totalPasswordPages = Math.ceil(passwordHistory.length / 4);
+  const passwordPaginationStart = Math.min(Math.max(1, passwordPage), Math.max(1, totalPasswordPages - 2));
+  const passwordPaginationItems = Array.from(
+    { length: Math.min(3, totalPasswordPages) },
+    (_, index) => passwordPaginationStart + index,
+  );
   return (
     <div className="w-full max-w-[calc(97%+5px)] 2xl:max-w-[1750px] mx-auto px-1 pt-2 pb-5 space-y-3 font-['Signika',sans-serif]">
       {/* =========================================================================
@@ -825,12 +834,13 @@ export default function ProfilePage() {
                       </svg>
                       <h3 className="text-xs font-bold text-slate-800">Bạn chưa đổi mật khẩu lần nào.</h3>
                       <p className="text-[11px] text-slate-400 mt-1">
-                        Hãy đổi mật khẩu ở bên trái nhé!
+                        Hãy thử đổi mật khẩu ở bên trái nhé!
                       </p>
                     </div>
                   ) : (
-                    <div className="w-full space-y-2 overflow-y-auto">
-                      {passwordHistory.map((entry) => (
+                    <div className="w-full h-full flex flex-col justify-between gap-3">
+                      <div className="space-y-2 overflow-y-auto">
+                      {passwordHistory.slice((passwordPage - 1) * 4, passwordPage * 4).map((entry) => (
                         <div key={entry.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-sm">
                           <p className="font-bold text-slate-900">Đổi mật khẩu thành công</p>
                           <p className="mt-1 text-slate-500">
@@ -838,6 +848,12 @@ export default function ProfilePage() {
                           </p>
                         </div>
                       ))}
+                      </div>
+                      <div className="flex items-center justify-center gap-2 pt-1">
+                        <button type="button" disabled={passwordPage === 1} onClick={() => setPasswordPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">‹</button>
+                        {passwordPaginationItems.map((page) => <button key={page} type="button" onClick={() => setPasswordPage(page)} className={`h-9 w-9 rounded-full text-xs font-bold ${passwordPage === page ? 'bg-[#d70018] text-white shadow-md' : 'border border-slate-200 text-slate-700'}`}>{page}</button>)}
+                        <button type="button" disabled={passwordPage === totalPasswordPages} onClick={() => setPasswordPage((page) => page + 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">›</button>
+                      </div>
                     </div>
                   )}
                 </div>

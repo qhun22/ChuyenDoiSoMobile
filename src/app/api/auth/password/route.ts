@@ -1,8 +1,8 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { D1Database } from '@cloudflare/workers-types';
-import { findDevUser } from '@/lib/dev-auth-store';
+import { findDevUser, updateDevUserPassword } from '@/lib/dev-auth-store';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 type PasswordRequest = { user_email?: string; user_id?: string | number; current_password?: string; new_password?: string };
 type PasswordHistoryRow = { id: number; changed_at: string; ip_address: string };
@@ -65,6 +65,7 @@ export async function POST(request: Request) {
     const expected = devPasswords.get(key) || devUser?.password || (user.email === 'admin@gmail.com' ? 'admin123' : '');
     if (expected !== current) return Response.json({ message: 'Mật khẩu hiện tại không đúng.' }, { status: 401 });
     devPasswords.set(key, next);
+    if (user.email) updateDevUserPassword(user.email, next);
     const row = { id: Date.now(), changed_at: new Date().toISOString(), ip_address: addressIp };
     devHistory.set(key, [row, ...(devHistory.get(key) ?? [])]);
     return Response.json({ historyEntry: formatHistory(row) });
@@ -72,7 +73,18 @@ export async function POST(request: Request) {
   const account = user.email
     ? await db.prepare('SELECT id, email, password_hash FROM users WHERE email = ?').bind(user.email).first<{ id: string | number; email: string; password_hash: string }>()
     : await db.prepare('SELECT id, email, password_hash FROM users WHERE id = ?').bind(user.id).first<{ id: string | number; email: string; password_hash: string }>();
-  if (!account || account.password_hash !== current) return Response.json({ message: 'Mật khẩu hiện tại không đúng.' }, { status: 401 });
+  if (!account) {
+    const key = user.email || user.id;
+    const devUser = user.email ? findDevUser(user.email) : undefined;
+    const expected = devPasswords.get(key) || devUser?.password || (user.email === 'admin@gmail.com' ? 'admin123' : '');
+    if (expected !== current) return Response.json({ message: 'Mật khẩu hiện tại không đúng.' }, { status: 401 });
+    devPasswords.set(key, next);
+    if (user.email) updateDevUserPassword(user.email, next);
+    const row = { id: Date.now(), changed_at: new Date().toISOString(), ip_address: addressIp };
+    devHistory.set(key, [row, ...(devHistory.get(key) ?? [])]);
+    return Response.json({ historyEntry: formatHistory(row) });
+  }
+  if (account.password_hash !== current) return Response.json({ message: 'Mật khẩu hiện tại không đúng.' }, { status: 401 });
   await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(next, account.id).run();
   const result = await db.prepare('INSERT INTO password_change_history (user_email, user_id, ip_address) VALUES (?, ?, ?)').bind(account.email, String(account.id), addressIp).run();
   return Response.json({ historyEntry: { id: Number(result.meta.last_row_id), changedAt: new Date().toISOString(), ipAddress: addressIp } });

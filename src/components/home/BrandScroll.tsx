@@ -26,18 +26,18 @@ export default function BrandScroll() {
   return (
     <section className="w-full my-4 font-['Signika',sans-serif]">
       {/* Tiêu đề HÃNG NỔI BẬT căn giữa chuẩn font Signika */}
-<div className="flex items-center justify-center gap-3 my-4 font-['Signika',sans-serif] -translate-y-[6px]">
-  {/* Line mảnh mờ bên trái */}
-  <div className="h-[1.5px] w-10 sm:w-16 bg-gradient-to-r from-transparent to-slate-400/40 rounded-full" />
-  
-  {/* Chữ đen tím nhẹ quét sáng */}
-  <span className="relative text-base sm:text-xl font-extrabold uppercase tracking-widest bg-gradient-to-r from-slate-900 via-purple-700 to-slate-900 bg-[length:200%_auto] bg-clip-text text-transparent animate-text-shimmer">
-    HÃNG NỔI BẬT
-  </span>
+      <div className="flex items-center justify-center gap-3 my-4 font-['Signika',sans-serif] -translate-y-[6px]">
+        {/* Line mảnh mờ bên trái */}
+        <div className="h-[1.5px] w-10 sm:w-16 bg-gradient-to-r from-transparent to-slate-400/40 rounded-full" />
 
-  {/* Line mảnh mờ bên phải */}
-  <div className="h-[1.5px] w-10 sm:w-16 bg-gradient-to-l from-transparent to-slate-400/40 rounded-full" />
-</div>
+{/* Chữ đen tím nhẹ quét sáng */}
+        <h2 className="relative text-[12px] sm:text-[18px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-slate-900 via-purple-700 to-slate-900 bg-[length:200%_auto] bg-clip-text text-transparent animate-text-shimmer">
+          HÃNG NỔI BẬT
+        </h2>
+
+        {/* Line mảnh mờ bên phải */}
+        <div className="h-[1.5px] w-10 sm:w-16 bg-gradient-to-l from-transparent to-slate-400/40 rounded-full" />
+      </div>
 
       {/* Dải Carousel cuộn vô tận */}
       <div className="relative w-full overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_30px,_black_calc(100%-30px),transparent_100%)]">

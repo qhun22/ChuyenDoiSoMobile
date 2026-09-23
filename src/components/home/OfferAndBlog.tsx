@@ -120,7 +120,7 @@ export default function OfferAndBlog() {
     <section
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative w-full group mb-6 select-none"
+      className="relative w-full group mb-6 select-none mt-5.5"
     >
       {/* Container cắt góc và giới hạn hiển thị */}
       <div className="overflow-hidden rounded-2xl">

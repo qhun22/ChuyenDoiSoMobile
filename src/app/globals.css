@@ -297,12 +297,37 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
 }
 
 @keyframes slideInAddress {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Chuyển tab: fade + nhẹ slide lên */
+@keyframes fadeInTab {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Card mới xuất hiện: fade + slide từ trái */
+@keyframes fadeInCard {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Pulse glow cho input focus (không dùng ring CSS, dùng animation) */
+@keyframes inputFocusGlow {
+  0%   { box-shadow: 0 0 0 0 rgba(215,0,24,0.15); }
+  50%  { box-shadow: 0 0 0 4px rgba(215,0,24,0.1); }
+  100% { box-shadow: 0 0 0 3px rgba(215,0,24,0.08); }
+}
+
+/* Modal backdrop: fade in */
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Modal dialog: scale + slide lên */
+@keyframes modalContentIn {
+  from { opacity: 0; transform: scale(0.93) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
 }

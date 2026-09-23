@@ -23,6 +23,7 @@ export default function Header() {
   // State Drawer & Search Panel Mobile
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
 
   // Search PC & Mobile
   const [query, setQuery] = useState('');
@@ -39,6 +40,33 @@ export default function Header() {
   });
 
   const searchBoxRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const loadUserName = () => {
+      try {
+        const storedUser = localStorage.getItem('user_info');
+        if (!storedUser) {
+          setUserName(null);
+          return;
+        }
+
+        const user = JSON.parse(storedUser) as { name?: string; full_name?: string; email?: string };
+        const displayName = user.name || user.full_name || user.email || '';
+        setUserName(displayName ? displayName.toUpperCase() : null);
+      } catch {
+        setUserName(null);
+      }
+    };
+
+    loadUserName();
+    window.addEventListener('auth-state-changed', loadUserName);
+    window.addEventListener('storage', loadUserName);
+
+    return () => {
+      window.removeEventListener('auth-state-changed', loadUserName);
+      window.removeEventListener('storage', loadUserName);
+    };
+  }, []);
 
   // Đọc lịch sử tìm kiếm từ LocalStorage
   useEffect(() => {
@@ -276,7 +304,7 @@ export default function Header() {
             </Link>
 
             {/* 4. Đăng nhập - Trỏ thẳng về /login */}
-            <Link href="/login" className="flex items-center gap-2 hover:text-[#b8001f] transition group cursor-pointer">
+            <Link href={userName ? '/profile' : '/login'} className="flex items-center gap-2 hover:text-[#b8001f] transition group cursor-pointer">
               <div className="leading-none text-gray-700 group-hover:text-[#b8001f]">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -284,7 +312,7 @@ export default function Header() {
               </div>
               <div className="text-[11px] leading-tight">
                 <span className="block text-gray-400 font-normal">Xin chào</span>
-                <span className="font-bold text-gray-700 group-hover:text-[#b8001f]">Đăng nhập</span>
+                <span className="font-bold text-gray-700 group-hover:text-[#b8001f]">{userName || 'Đăng nhập'}</span>
               </div>
             </Link>
           </div>
@@ -313,7 +341,7 @@ export default function Header() {
               </div>
 
               <div className="py-3 text-sm text-slate-500">
-                Xin chào, <strong className="text-slate-800">Khách</strong>
+                Xin chào, <strong className="text-slate-800">{userName || 'Khách'}</strong>
               </div>
 
               <nav className="space-y-1 text-sm font-medium">

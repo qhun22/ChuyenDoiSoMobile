@@ -12,6 +12,15 @@ export default function LoginPage() {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [registerName, setRegisterName] = useState('');
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerOtp, setRegisterOtp] = useState('');
+  const [registerPhone, setRegisterPhone] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerPasswordConfirmation, setRegisterPasswordConfirmation] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterPasswordConfirmation, setShowRegisterPasswordConfirmation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const turnstileRef = useRef<TurnstileInstance>(null);
@@ -60,12 +69,76 @@ export default function LoginPage() {
 
       if (data.access_token) localStorage.setItem('access_token', data.access_token);
       if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
-      if (data.user) localStorage.setItem('user_info', JSON.stringify(data.user));
       toast.success('Đăng nhập thành công! Đang chuyển hướng...');
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+      if (data.user) {
+        localStorage.setItem('user_info', JSON.stringify(data.user));
+        window.dispatchEvent(new Event('auth-state-changed'));
+      }
       router.push('/profile');
     } catch (error) {
       const message = error instanceof Error ? error.message : undefined;
       toast.error(message || 'Đăng nhập thất bại!');
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    if (!registerName.trim() || !registerEmail.trim() || !registerPhone.trim() || !registerPassword || !registerPasswordConfirmation) {
+      toast.warning('Vui lòng nhập đầy đủ thông tin đăng ký');
+      return;
+    }
+
+    if (registerPassword.length < 6) {
+      toast.warning('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
+    if (registerPassword !== registerPasswordConfirmation) {
+      toast.warning('Mật khẩu xác nhận không khớp');
+      return;
+    }
+
+    if (!turnstileToken) {
+      toast.warning('Vui lòng hoàn tất xác thực Turnstile CAPTCHA');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: registerName.trim(),
+          email: registerEmail.trim(),
+          phone: registerPhone.trim(),
+          otp: registerOtp.trim(),
+          password: registerPassword,
+          turnstile_token: turnstileToken,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || 'Đăng ký thất bại!');
+      }
+
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      setEmail(registerEmail.trim());
+      setPassword('');
+      setRegisterPassword('');
+      setRegisterPasswordConfirmation('');
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
+      setMode('login');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Đăng ký thất bại!');
       setTurnstileToken('');
       turnstileRef.current?.reset();
     } finally {
@@ -123,12 +196,21 @@ export default function LoginPage() {
                     </svg>
                   </span>
                   <input
-                    type="password"
+                    type={showLoginPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Nhập mật khẩu"
-                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] focus:ring-1 focus:ring-[#d70018] bg-slate-50/50 transition"
+                    className="w-full pl-12 pr-12 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] focus:ring-1 focus:ring-[#d70018] bg-slate-50/50 transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword((isVisible) => !isVisible)}
+                    aria-label={showLoginPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                  >
+                    <i className={showLoginPassword ? 'ri-eye-off-line text-lg' : 'ri-eye-line text-lg'} aria-hidden="true" />
+                  </button>
                 </div>
               </div>
 
@@ -216,6 +298,8 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="text"
+                  value={registerName}
+                  onChange={(event) => setRegisterName(event.target.value)}
                   placeholder="Nhập họ tên đầy đủ"
                   className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                 />
@@ -228,6 +312,8 @@ export default function LoginPage() {
                 <div className="flex gap-2.5">
                   <input
                     type="email"
+                    value={registerEmail}
+                    onChange={(event) => setRegisterEmail(event.target.value)}
                     placeholder="Nhập email"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                   />
@@ -247,6 +333,8 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="text"
+                    value={registerOtp}
+                    onChange={(event) => setRegisterOtp(event.target.value)}
                     placeholder="Mã về email"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                   />
@@ -257,6 +345,8 @@ export default function LoginPage() {
                   </label>
                   <input
                     type="tel"
+                    value={registerPhone}
+                    onChange={(event) => setRegisterPhone(event.target.value)}
                     placeholder="Số điện thoại"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                   />
@@ -268,21 +358,35 @@ export default function LoginPage() {
                   <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1">
                     MẬT KHẨU
                   </label>
-                  <input
-                    type="password"
-                    placeholder="Tối thiểu 6 ký tự"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showRegisterPassword ? 'text' : 'password'}
+                      value={registerPassword}
+                      onChange={(event) => setRegisterPassword(event.target.value)}
+                      placeholder="Tối thiểu 6 ký tự"
+                      className="w-full px-4 pr-12 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
+                    />
+                    <button type="button" onClick={() => setShowRegisterPassword((isVisible) => !isVisible)} aria-label={showRegisterPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'} tabIndex={-1} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+                      <i className={showRegisterPassword ? 'ri-eye-off-line text-lg' : 'ri-eye-line text-lg'} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1">
                     NHẬP LẠI MẬT KHẨU
                   </label>
-                  <input
-                    type="password"
-                    placeholder="Nhập lại MK"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showRegisterPasswordConfirmation ? 'text' : 'password'}
+                      value={registerPasswordConfirmation}
+                      onChange={(event) => setRegisterPasswordConfirmation(event.target.value)}
+                      placeholder="Nhập lại MK"
+                      className="w-full px-4 pr-12 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
+                    />
+                    <button type="button" onClick={() => setShowRegisterPasswordConfirmation((isVisible) => !isVisible)} aria-label={showRegisterPasswordConfirmation ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'} tabIndex={-1} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+                      <i className={showRegisterPasswordConfirmation ? 'ri-eye-off-line text-lg' : 'ri-eye-line text-lg'} aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -300,6 +404,8 @@ export default function LoginPage() {
 
               <button
                 type="button"
+                onClick={handleRegisterSubmit}
+                disabled={isLoading}
                 className="w-full py-3 rounded-xl bg-[#d70018] text-white font-bold text-sm tracking-wider uppercase shadow hover:bg-[#bf0015] active:scale-[0.99] transition cursor-pointer"
               >
                 ĐĂNG KÝ

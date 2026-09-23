@@ -25,10 +25,16 @@ interface Address {
   isDefault: boolean;
 }
 
+type ConfirmationAction =
+  | { type: 'logout' }
+  | { type: 'delete-address'; addressId: number }
+  | null;
+
 export default function ProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ProfileTab>('address');
   const [addresses, setAddresses] = useState<Address[]>([]);
+  const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction>(null);
 
   // Dữ liệu mẫu hiển thị (sau này nối API Django chỉ cần thay vào state này)
   const [user, setUser] = useState<UserProfile>({
@@ -61,16 +67,13 @@ export default function ProfilePage() {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_info');
+    window.dispatchEvent(new Event('auth-state-changed'));
     toast.info('Đã đăng xuất tài khoản');
-    router.push('/login');
+    router.replace('/');
   };
 
   const handleLogout = () => {
-    toast('Bạn có chắc chắn muốn đăng xuất?', {
-      description: 'Phiên làm việc hiện tại sẽ kết thúc.',
-      action: { label: 'Đăng xuất', onClick: executeLogout },
-      cancel: { label: 'Hủy', onClick: () => {} },
-    });
+    setConfirmationAction({ type: 'logout' });
   };
 
   const handleAddressSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -89,13 +92,20 @@ export default function ProfilePage() {
   };
 
   const handleAddressDelete = (addressId: number) => {
-    toast('Bạn có chắc chắn muốn xóa địa chỉ này?', {
-      action: {
-        label: 'Xóa',
-        onClick: () => setAddresses((currentAddresses) => currentAddresses.filter(({ id }) => id !== addressId)),
-      },
-      cancel: { label: 'Hủy', onClick: () => {} },
-    });
+    setConfirmationAction({ type: 'delete-address', addressId });
+  };
+
+  const handleConfirmation = () => {
+    if (!confirmationAction) return;
+
+    if (confirmationAction.type === 'logout') {
+      executeLogout();
+    } else {
+      setAddresses((currentAddresses) => currentAddresses.filter(({ id }) => id !== confirmationAction.addressId));
+      toast.success('Đã xóa địa chỉ');
+    }
+
+    setConfirmationAction(null);
   };
 
   const formatVND = (num: number) => {
@@ -103,7 +113,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="w-full bg-[#f8fafc] py-6 sm:py-8 font-['Signika',sans-serif]">
+    <div className="profile-page w-full py-6 sm:py-8 font-['Signika',sans-serif]">
       <div className="mx-auto max-w-[1250px] px-4 space-y-4">
         
         {/* =========================================================================
@@ -485,6 +495,29 @@ export default function ProfilePage() {
         )}
 
       </div>
+
+      {confirmationAction && (
+        <div className="confirmation-container" role="dialog" aria-modal="true" aria-labelledby="confirmation-title">
+          <div className="confirmation-dialog">
+            <h2 id="confirmation-title">
+              {confirmationAction.type === 'logout' ? 'Bạn có chắc chắn muốn đăng xuất?' : 'Bạn có chắc chắn muốn xóa địa chỉ này?'}
+            </h2>
+            <p>
+              {confirmationAction.type === 'logout'
+                ? 'Phiên làm việc hiện tại sẽ kết thúc.'
+                : 'Địa chỉ này sẽ được xóa khỏi danh sách của bạn.'}
+            </p>
+            <div className="confirmation-actions">
+              <button type="button" onClick={() => setConfirmationAction(null)} className="confirmation-cancel">
+                Hủy
+              </button>
+              <button type="button" onClick={handleConfirmation} className="confirmation-confirm">
+                {confirmationAction.type === 'logout' ? 'Đăng xuất' : 'Xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

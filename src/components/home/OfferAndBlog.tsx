@@ -96,7 +96,7 @@ export default function OfferAndBlog() {
   }, []);
 
   return (
-    <section className="relative w-full group overflow-hidden rounded-2xl mb-10 select-none">
+    <section className="relative w-full group overflow-hidden rounded-2xl mb-10 select-none border border-black/10 shadow-sm">
       {/* Container căn lề cân bằng */}
       <div className="-mx-1.5 sm:-mx-2 relative">
         <div
@@ -133,11 +133,6 @@ export default function OfferAndBlog() {
         </div>
       </div>
 
-      {/* =========================================================================
-          LỚP VIỀN ĐEN MỜ NHẸ 2 BÊN (INNER VIGNETTE SHADOW)
-          ========================================================================= */}
-      <div className="absolute inset-y-0 left-0 w-8 sm:w-16 bg-gradient-to-r from-black/25 via-black/5 to-transparent pointer-events-none z-10 rounded-l-2xl" />
-      <div className="absolute inset-y-0 right-0 w-8 sm:w-16 bg-gradient-to-l from-black/25 via-black/5 to-transparent pointer-events-none z-10 rounded-r-2xl" />
 
       {/* Nút lùi (Prev) */}
       <button

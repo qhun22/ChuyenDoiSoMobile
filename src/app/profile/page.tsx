@@ -90,8 +90,6 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('address');
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressPage, setAddressPage] = useState(1);
-  const [settingDefaultId, setSettingDefaultId] = useState<number | null>(null);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordHistory, setPasswordHistory] = useState<PasswordHistory[]>([]);
   const [passwordPage, setPasswordPage] = useState(1);
 
@@ -102,7 +100,6 @@ export default function ProfilePage() {
   const [isLoadingCommunes, setIsLoadingCommunes] = useState<boolean>(false);
 
   const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction>(null);
-  const [isConfirming, setIsConfirming] = useState(false);
 
   const [user, setUser] = useState<UserProfile>({
     id: 'dev-admin',
@@ -130,16 +127,6 @@ export default function ProfilePage() {
       localStorage.removeItem('user_info');
     }
   }, []);
-
-  // Đóng modal khi nhấn Escape
-  useEffect(() => {
-    if (!confirmationAction) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isConfirming) setConfirmationAction(null);
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [confirmationAction, isConfirming]);
 
   useEffect(() => {
     if (!user.id) return;
@@ -294,55 +281,41 @@ export default function ProfilePage() {
     setConfirmationAction({ type: 'delete-address', addressId });
   };
 
-  const handleConfirmation = async () => {
+  const handleConfirmation = () => {
     if (!confirmationAction) return;
-    setIsConfirming(true);
-    try {
-      if (confirmationAction.type === 'logout') {
-        executeLogout();
-      } else {
-        const response = await fetch(`/api/addresses?id=${confirmationAction.addressId}`, {
-          method: 'DELETE',
-          headers: {
-            'x-user-email': user.email,
-            'x-user-id': String(user.id ?? ''),
-          },
-        });
-        if (!response.ok) throw new Error();
-        setAddresses((currentAddresses) => currentAddresses.filter(({ id }) => id !== confirmationAction.addressId));
-        setAddressPage((page) => Math.min(page, Math.max(1, Math.ceil((addresses.length - 1) / 3))));
-        toast.success('Đã xóa địa chỉ');
-        setConfirmationAction(null);
-      }
-    } catch {
-      toast.error('Không thể xóa địa chỉ.');
-    } finally {
-      setIsConfirming(false);
-    }
-  };
 
-  const setDefaultAddress = async (addressId: number) => {
-    setSettingDefaultId(addressId);
-    try {
-      const response = await fetch(`/api/addresses?id=${addressId}`, {
-        method: 'PATCH',
+    if (confirmationAction.type === 'logout') {
+      executeLogout();
+    } else {
+      fetch(`/api/addresses?id=${confirmationAction.addressId}`, {
+        method: 'DELETE',
         headers: {
-          'Content-Type': 'application/json',
           'x-user-email': user.email,
           'x-user-id': String(user.id ?? ''),
         },
-        body: JSON.stringify({ user_email: user.email, user_id: user.id }),
-      });
-      if (!response.ok) { toast.error('Không thể đặt địa chỉ mặc định.'); return; }
-      setAddresses((currentAddresses) => {
-        const updated = currentAddresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
-        return [...updated.filter((a) => a.isDefault), ...updated.filter((a) => !a.isDefault)];
-      });
-      setAddressPage(1);
-      toast.success('Đã đặt địa chỉ mặc định thành công!');
-    } finally {
-      setSettingDefaultId(null);
+      })
+        .then((response) => { if (!response.ok) throw new Error(); setAddresses((currentAddresses) => currentAddresses.filter(({ id }) => id !== confirmationAction.addressId)); setAddressPage((page) => Math.min(page, Math.max(1, Math.ceil((addresses.length - 1) / 3)))); toast.success('Đã xóa địa chỉ'); })
+        .catch(() => toast.error('Không thể xóa địa chỉ.'));
     }
+
+    setConfirmationAction(null);
+  };
+
+  const setDefaultAddress = async (addressId: number) => {
+    const response = await fetch(`/api/addresses?id=${addressId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-email': user.email,
+        'x-user-id': String(user.id ?? ''),
+      },
+      body: JSON.stringify({ user_email: user.email, user_id: user.id }),
+    });
+    if (!response.ok) { toast.error('Không thể đặt địa chỉ mặc định.'); return; }
+    setAddresses((currentAddresses) => {
+      const updated = currentAddresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
+      return [...updated.filter((a) => a.isDefault), ...updated.filter((a) => !a.isDefault)];
+    });
   };
 
   const handlePasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -366,36 +339,31 @@ export default function ProfilePage() {
       return;
     }
 
-    setIsChangingPassword(true);
-    try {
-      const response = await fetch('/api/auth/password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-email': user.email,
-          'x-user-id': String(user.id ?? ''),
-        },
-        body: JSON.stringify({
-          user_email: user.email,
-          user_id: user.id,
-          current_password: currentPassword,
-          new_password: newPassword,
-        }),
-      });
-      const data = await response.json().catch(() => ({})) as { message?: string; historyEntry?: PasswordHistory };
-      if (!response.ok) {
-        toast.error(data.message || 'Không thể đổi mật khẩu.');
-        return;
-      }
-      formElement.reset();
-      if (data.historyEntry) {
-        setPasswordHistory((currentHistory) => [data.historyEntry!, ...currentHistory]);
-        setPasswordPage(1);
-      }
-      toast.success('Đổi mật khẩu thành công.');
-    } finally {
-      setIsChangingPassword(false);
+    const response = await fetch('/api/auth/password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-email': user.email,
+        'x-user-id': String(user.id ?? ''),
+      },
+      body: JSON.stringify({
+        user_email: user.email,
+        user_id: user.id,
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    });
+    const data = await response.json().catch(() => ({})) as { message?: string; historyEntry?: PasswordHistory };
+    if (!response.ok) {
+      toast.error(data.message || 'Không thể đổi mật khẩu.');
+      return;
     }
+    formElement.reset();
+    if (data.historyEntry) {
+      setPasswordHistory((currentHistory) => [data.historyEntry!, ...currentHistory]);
+      setPasswordPage(1);
+    }
+    toast.success('Đổi mật khẩu thành công.');
   };
 
   const formatVND = (num: number) => {
@@ -614,7 +582,7 @@ export default function ProfilePage() {
           ========================================================================= */}
       <div className="mt-5">
         {activeTab === 'address' && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 min-h-[460px]" style={{ animation: 'fadeInTab 0.28s ease' }}>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 min-h-[460px]">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
 
               {/* CỘT TRÁI: FORM THÊM ĐỊA CHỈ MỚI */}
@@ -637,7 +605,7 @@ export default function ProfilePage() {
                         type="text"
                         name="name"
                         placeholder="Nhập họ tên"
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition-all focus:scale-[1.01]" onFocus={(e) => { e.currentTarget.style.animation = 'inputFocusGlow 0.3s ease forwards'; }} onBlur={(e) => { e.currentTarget.style.animation = ''; }}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition"
                         required
                       />
                     </div>
@@ -649,7 +617,7 @@ export default function ProfilePage() {
                         type="tel"
                         name="phone"
                         placeholder="Nhập số điện thoại"
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition-all focus:scale-[1.01]" onFocus={(e) => { e.currentTarget.style.animation = 'inputFocusGlow 0.3s ease forwards'; }} onBlur={(e) => { e.currentTarget.style.animation = ''; }}
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition"
                         required
                       />
                     </div>
@@ -665,7 +633,7 @@ export default function ProfilePage() {
                         name="province"
                         value={selectedProvinceId}
                         onChange={(e) => setSelectedProvinceId(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 text-slate-700 cursor-pointer transition-all focus:scale-[1.01]"
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 text-slate-700 cursor-pointer transition"
                         required
                       >
                         <option value="">-- Chọn Tỉnh/Thành phố --</option>
@@ -710,7 +678,7 @@ export default function ProfilePage() {
                       type="text"
                       name="detail"
                       placeholder="Ví dụ: TDP Abcxyz, Số x Đường..."
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition-all focus:scale-[1.01]" onFocus={(e) => { e.currentTarget.style.animation = 'inputFocusGlow 0.3s ease forwards'; }} onBlur={(e) => { e.currentTarget.style.animation = ''; }}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition"
                       required
                     />
                   </div>
@@ -731,7 +699,7 @@ export default function ProfilePage() {
                   {/* Nút Submit */}
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-lg bg-[#d70018] text-white font-bold text-xs hover:bg-[#bf0015] hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm mt-1"
+                    className="w-full py-2.5 rounded-lg bg-[#d70018] text-white font-bold text-xs hover:bg-[#bf0015] active:scale-[0.99] transition cursor-pointer flex items-center justify-center gap-1.5 shadow-sm mt-1"
                   >
                     <span className="text-base leading-none">+</span>
                     <span>Thêm địa chỉ</span>
@@ -767,39 +735,16 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="w-full h-full flex flex-col justify-between gap-3">
-                      <div className="space-y-2 overflow-visible">
+                      <div className="space-y-2 overflow-y-auto">
                         {addresses.slice((addressPage - 1) * 3, addressPage * 3).map((address) => (
-                          <div
-                            key={address.id}
-                            style={{ animation: 'slideInAddress 0.3s ease' }}
-                            className={`rounded-lg border bg-white p-3 text-xs text-slate-700 shadow-sm transition-all duration-200 hover:shadow-md cursor-default ${address.isDefault ? 'border-[#d70018] shadow-[0_0_0_1px_rgba(215,0,24,0.15)]' : 'border-slate-200 hover:border-slate-300'}`}
-                          >
+                          <div key={address.id} className={`rounded-lg border bg-white p-3 text-xs text-slate-700 shadow-sm ${address.isDefault ? 'border-[#d70018]' : 'border-slate-200'}`}>
                             <div className="flex items-start justify-between gap-3">
-                              <div className="flex-1">
+                              <div>
                                 <p className="font-bold text-slate-900">{address.name} - {address.phone}</p>
                                 <p className="mt-1 text-slate-500">{address.detail}, {address.province}</p>
                                 <div className="mt-2 flex items-center gap-2">
-                                  {address.isDefault ? (
-                                    <span className="rounded-full bg-[#d70018] px-2 py-1 text-[10px] font-bold text-white">Đang mặc định</span>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      disabled={settingDefaultId !== null}
-                                      onClick={() => setDefaultAddress(address.id)}
-                                      className="inline-flex items-center gap-1 rounded-md border border-[#d70018] px-2 py-1 text-[10px] font-semibold text-[#d70018] disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
-                                    >
-                                      {settingDefaultId === address.id ? (
-                                        <>
-                                          <svg className="animate-spin w-2.5 h-2.5" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                          </svg>
-                                          Đang đặt...
-                                        </>
-                                      ) : 'Đặt mặc định'}
-                                    </button>
-                                  )}
-                                  <button type="button" onClick={() => handleAddressDelete(address.id)} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-colors duration-150">Xóa</button>
+                                  {address.isDefault ? <span className="rounded-full bg-[#d70018] px-2 py-1 text-[10px] font-bold text-white">Đang mặc định</span> : <button type="button" onClick={() => setDefaultAddress(address.id)} className="rounded-md border border-[#d70018] px-2 py-1 text-[10px] font-semibold text-[#d70018]">Đặt mặc định</button>}
+                                  <button type="button" onClick={() => handleAddressDelete(address.id)} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600">Xóa</button>
                                 </div>
                               </div>
                             </div>
@@ -807,9 +752,9 @@ export default function ProfilePage() {
                         ))}
                       </div>
                       <div className="flex items-center justify-center gap-2 pt-1">
-                        <button type="button" disabled={addressPage === 1} onClick={() => setAddressPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40 hover:scale-110 hover:border-slate-300 hover:shadow-sm active:scale-90 transition-all duration-150 disabled:hover:scale-100 disabled:hover:shadow-none">‹</button>
+                        <button type="button" disabled={addressPage === 1} onClick={() => setAddressPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">‹</button>
                         {paginationItems.map((page) => <button key={page} type="button" onClick={() => setAddressPage(page)} className={`h-9 w-9 rounded-full text-xs font-bold ${addressPage === page ? 'bg-[#d70018] text-white shadow-md' : 'border border-slate-200 text-slate-700'}`}>{page}</button>)}
-                        <button type="button" disabled={addressPage === totalAddressPages} onClick={() => setAddressPage((page) => page + 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40 hover:scale-110 hover:border-slate-300 hover:shadow-sm active:scale-90 transition-all duration-150 disabled:hover:scale-100 disabled:hover:shadow-none">›</button>
+                        <button type="button" disabled={addressPage === totalAddressPages} onClick={() => setAddressPage((page) => page + 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">›</button>
                       </div>
                     </div>
                   )}
@@ -821,7 +766,7 @@ export default function ProfilePage() {
         )}
 
         {activeTab === 'password' && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 min-h-[460px]" style={{ animation: 'fadeInTab 0.28s ease' }}>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 min-h-[460px]">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
               <div className="lg:col-span-6 flex flex-col justify-between h-full">
                 <div className="flex items-center gap-2 text-sm font-bold text-[#d70018] mb-1">
@@ -838,7 +783,7 @@ export default function ProfilePage() {
                       type="password"
                       name="currentPassword"
                       placeholder="Nhập mật khẩu hiện tại"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition-all focus:scale-[1.01]" onFocus={(e) => { e.currentTarget.style.animation = 'inputFocusGlow 0.3s ease forwards'; }} onBlur={(e) => { e.currentTarget.style.animation = ''; }}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition"
                       required
                     />
                   </div>
@@ -848,7 +793,7 @@ export default function ProfilePage() {
                       type="password"
                       name="newPassword"
                       placeholder="Nhập mật khẩu mới"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition-all focus:scale-[1.01]" onFocus={(e) => { e.currentTarget.style.animation = 'inputFocusGlow 0.3s ease forwards'; }} onBlur={(e) => { e.currentTarget.style.animation = ''; }}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition"
                       required
                     />
                   </div>
@@ -858,24 +803,15 @@ export default function ProfilePage() {
                       type="password"
                       name="confirmPassword"
                       placeholder="Nhập lại mật khẩu mới"
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition-all focus:scale-[1.01]" onFocus={(e) => { e.currentTarget.style.animation = 'inputFocusGlow 0.3s ease forwards'; }} onBlur={(e) => { e.currentTarget.style.animation = ''; }}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:border-[#d70018] bg-slate-50/50 transition"
                       required
                     />
                   </div>
                   <button
                     type="submit"
-                    disabled={isChangingPassword}
-                    className="w-full py-2.5 rounded-lg bg-[#d70018] text-white font-bold text-xs hover:bg-[#bf0015] hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none transition-all duration-200 cursor-pointer shadow-sm mt-1 inline-flex items-center justify-center gap-2"
+                    className="w-full py-2.5 rounded-lg bg-[#d70018] text-white font-bold text-xs hover:bg-[#bf0015] active:scale-[0.99] transition cursor-pointer shadow-sm mt-1"
                   >
-                    {isChangingPassword ? (
-                      <>
-                        <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                        </svg>
-                        Đang cập nhật...
-                      </>
-                    ) : 'Cập nhật mật khẩu'}
+                    Cập nhật mật khẩu
                   </button>
                 </form>
               </div>
@@ -886,7 +822,6 @@ export default function ProfilePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="text-slate-900 font-bold uppercase tracking-wide">Lịch sử đổi mật khẩu</span>
-
                 </div>
                 <div className="flex-1 w-full min-h-[390px] p-0 flex flex-col justify-center items-center overflow-hidden mt-2">
                   {passwordHistory.length === 0 ? (
@@ -903,7 +838,7 @@ export default function ProfilePage() {
                     <div className="w-full h-full flex flex-col justify-between gap-3">
                       <div className="space-y-2 overflow-y-auto">
                         {passwordHistory.slice((passwordPage - 1) * 4, passwordPage * 4).map((entry) => (
-                          <div key={entry.id} style={{ animation: 'fadeInCard 0.35s ease' }} className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-sm hover:shadow-md hover:-translate-y-[1px] transition-all duration-200">
+                          <div key={entry.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-sm">
                             <p className="font-bold text-slate-900">Đổi mật khẩu thành công</p>
                             <p className="mt-1 text-slate-500">
                               {new Date(entry.changedAt).toLocaleString('vi-VN')} · IP: {entry.ipAddress}
@@ -912,9 +847,9 @@ export default function ProfilePage() {
                         ))}
                       </div>
                       <div className="flex items-center justify-center gap-2 pt-1">
-                        <button type="button" disabled={passwordPage === 1} onClick={() => setPasswordPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40 hover:scale-110 hover:border-slate-300 hover:shadow-sm active:scale-90 transition-all duration-150 disabled:hover:scale-100 disabled:hover:shadow-none">‹</button>
+                        <button type="button" disabled={passwordPage === 1} onClick={() => setPasswordPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">‹</button>
                         {passwordPaginationItems.map((page) => <button key={page} type="button" onClick={() => setPasswordPage(page)} className={`h-9 w-9 rounded-full text-xs font-bold ${passwordPage === page ? 'bg-[#d70018] text-white shadow-md' : 'border border-slate-200 text-slate-700'}`}>{page}</button>)}
-                        <button type="button" disabled={passwordPage === totalPasswordPages} onClick={() => setPasswordPage((page) => page + 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40 hover:scale-110 hover:border-slate-300 hover:shadow-sm active:scale-90 transition-all duration-150 disabled:hover:scale-100 disabled:hover:shadow-none">›</button>
+                        <button type="button" disabled={passwordPage === totalPasswordPages} onClick={() => setPasswordPage((page) => page + 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">›</button>
                       </div>
                     </div>
                   )}
@@ -925,95 +860,33 @@ export default function ProfilePage() {
         )}
       </div>
 
-      {/* =========================================================================
-          CONFIRMATION MODAL — Đóng bằng Escape, click backdrop, hoặc nút Hủy
-          ========================================================================= */}
+      {/* Confirmation Modal */}
       {confirmationAction && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ animation: 'modalBackdropIn 0.2s ease' }}
-          onClick={() => { if (!isConfirming) setConfirmationAction(null); }}
-        >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-[3px]" />
-
-          {/* Dialog */}
-          <div
-            className="relative bg-white rounded-2xl w-full max-w-[400px] shadow-2xl border border-slate-100 overflow-hidden"
-            style={{ animation: 'modalContentIn 0.25s ease' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top color strip theo action type */}
-            <div className={`h-1 w-full ${confirmationAction.type === 'logout' ? 'bg-amber-400' : 'bg-red-500'}`} />
-
-            <div className="p-6 text-center">
-              {/* Icon */}
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                confirmationAction.type === 'logout' ? 'bg-amber-50' : 'bg-red-50'
-              }`}>
-                {confirmationAction.type === 'logout' ? (
-                  <svg className="w-7 h-7 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
-                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                ) : (
-                  <svg className="w-7 h-7 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                )}
-              </div>
-
-              {/* Title */}
-              <h2 className="text-base font-bold text-slate-900 mb-1.5">
-                {confirmationAction.type === 'logout'
-                  ? 'Xác nhận đăng xuất?'
-                  : 'Xóa địa chỉ này?'}
-              </h2>
-
-              {/* Description */}
-              <p className="text-sm text-slate-500 mb-6">
-                {confirmationAction.type === 'logout'
-                  ? 'Phíiện làm việc hiện tại sẽ kết thúc. Bạn có thể đăng nhập lại bất cứ lúc nào.'
-                  : 'Địa chỉ này sẽ bị xóa vĩnh viễn và không thể khôi phục.'}
-              </p>
-
-              {/* Escape hint */}
-              <p className="text-[10px] text-slate-300 mb-4">Nhấn Esc hoặc click ra ngoài để hủy</p>
-
-              {/* Buttons */}
-              <div className="flex gap-2.5">
-                <button
-                  type="button"
-                  disabled={isConfirming}
-                  onClick={() => setConfirmationAction(null)}
-                  className="flex-1 py-2.5 px-4 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] transition-all duration-150 cursor-pointer disabled:opacity-50"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  disabled={isConfirming}
-                  onClick={handleConfirmation}
-                  className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-semibold text-white hover:shadow-md hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-150 cursor-pointer inline-flex items-center justify-center gap-2 ${
-                    confirmationAction.type === 'logout'
-                      ? 'bg-amber-500 hover:bg-amber-600'
-                      : 'bg-red-500 hover:bg-red-600'
-                  }`}
-                >
-                  {isConfirming ? (
-                    <>
-                      <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                      </svg>
-                      Đang xử lý...
-                    </>
-                  ) : (
-                    confirmationAction.type === 'logout' ? 'Đăng xuất' : 'Xóa'
-                  )}
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-[calc(100%-2rem)] max-w-[420px] p-5 sm:p-6 shadow-xl border border-slate-100 text-center animate-in fade-in zoom-in-95 duration-150">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-2">
+              {confirmationAction.type === 'logout' ? 'Bạn có chắc chắn muốn đăng xuất?' : 'Bạn có chắc chắn muốn xóa địa chỉ này?'}
+            </h2>
+            <p className="text-sm text-slate-500 mb-6">
+              {confirmationAction.type === 'logout'
+                ? 'Phiên làm việc hiện tại sẽ kết thúc.'
+                : 'Địa chỉ này sẽ được xóa khỏi danh sách của bạn.'}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setConfirmationAction(null)}
+                className="flex-1 min-h-11 py-2.5 px-4 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmation}
+                className="flex-1 min-h-11 py-2.5 px-4 rounded-lg bg-[#d70018] text-white text-sm font-semibold hover:bg-[#bf0015] transition cursor-pointer"
+              >
+                {confirmationAction.type === 'logout' ? 'Đăng xuất' : 'Xóa'}
+              </button>
             </div>
           </div>
         </div>

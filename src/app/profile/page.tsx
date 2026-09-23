@@ -90,6 +90,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>('address');
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [addressPage, setAddressPage] = useState(1);
+  const [settingDefaultId, setSettingDefaultId] = useState<number | null>(null);
   const [passwordHistory, setPasswordHistory] = useState<PasswordHistory[]>([]);
   const [passwordPage, setPasswordPage] = useState(1);
 
@@ -188,9 +189,9 @@ export default function ProfilePage() {
         const rawList = data?.communes || data?.data || (Array.isArray(data) ? data : []);
         const list = Array.isArray(rawList)
           ? rawList.map((commune: { id?: string | number; code?: string | number; name: string }) => ({
-              id: String(commune.id ?? commune.code),
-              name: commune.name,
-            }))
+            id: String(commune.id ?? commune.code),
+            name: commune.name,
+          }))
           : [];
         if (list.length > 0) {
           setCommunes(list);
@@ -302,20 +303,27 @@ export default function ProfilePage() {
   };
 
   const setDefaultAddress = async (addressId: number) => {
-    const response = await fetch(`/api/addresses?id=${addressId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-user-email': user.email,
-        'x-user-id': String(user.id ?? ''),
-      },
-      body: JSON.stringify({ user_email: user.email, user_id: user.id }),
-    });
-    if (!response.ok) { toast.error('Không thể đặt địa chỉ mặc định.'); return; }
-    setAddresses((currentAddresses) => {
-      const updated = currentAddresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
-      return [...updated.filter((a) => a.isDefault), ...updated.filter((a) => !a.isDefault)];
-    });
+    setSettingDefaultId(addressId);
+    try {
+      const response = await fetch(`/api/addresses?id=${addressId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-email': user.email,
+          'x-user-id': String(user.id ?? ''),
+        },
+        body: JSON.stringify({ user_email: user.email, user_id: user.id }),
+      });
+      if (!response.ok) { toast.error('Không thể đặt địa chỉ mặc định.'); return; }
+      setAddresses((currentAddresses) => {
+        const updated = currentAddresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
+        return [...updated.filter((a) => a.isDefault), ...updated.filter((a) => !a.isDefault)];
+      });
+      setAddressPage(1);
+      toast.success('Đã đặt địa chỉ mặc định thành công!');
+    } finally {
+      setSettingDefaultId(null);
+    }
   };
 
   const handlePasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -487,9 +495,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('address')}
-            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === 'address' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${activeTab === 'address' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -504,9 +511,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('password')}
-            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === 'password' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${activeTab === 'password' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -520,9 +526,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('student')}
-            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === 'student' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${activeTab === 'student' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -536,9 +541,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('coupon')}
-            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === 'coupon' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${activeTab === 'coupon' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -552,9 +556,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('history')}
-            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === 'history' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${activeTab === 'history' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -568,9 +571,8 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setActiveTab('refund')}
-            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${
-              activeTab === 'refund' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
-            }`}
+            className={`relative flex items-center gap-2 py-2 px-3.5 text-xs font-semibold transition cursor-pointer ${activeTab === 'refund' ? 'text-[#d70018]' : 'text-slate-600 hover:text-slate-900'
+              }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -590,7 +592,7 @@ export default function ProfilePage() {
         {activeTab === 'address' && (
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 min-h-[460px]">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch h-full">
-              
+
               {/* CỘT TRÁI: FORM THÊM ĐỊA CHỈ MỚI */}
               <div className="lg:col-span-6 flex flex-col justify-between h-full">
                 <div className="flex items-center gap-2 text-sm font-bold text-[#d70018] mb-1">
@@ -742,20 +744,43 @@ export default function ProfilePage() {
                   ) : (
                     <div className="w-full h-full flex flex-col justify-between gap-3">
                       <div className="space-y-2 overflow-y-auto">
-                      {addresses.slice((addressPage - 1) * 3, addressPage * 3).map((address) => (
-                        <div key={address.id} className={`rounded-lg border bg-white p-3 text-xs text-slate-700 shadow-sm ${address.isDefault ? 'border-[#d70018]' : 'border-slate-200'}`}>
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-bold text-slate-900">{address.name} - {address.phone}</p>
-                              <p className="mt-1 text-slate-500">{address.detail}, {address.province}</p>
-                              <div className="mt-2 flex items-center gap-2">
-                                {address.isDefault ? <span className="rounded-full bg-[#d70018] px-2 py-1 text-[10px] font-bold text-white">Đang mặc định</span> : <button type="button" onClick={() => setDefaultAddress(address.id)} className="rounded-md border border-[#d70018] px-2 py-1 text-[10px] font-semibold text-[#d70018]">Đặt mặc định</button>}
-                                <button type="button" onClick={() => handleAddressDelete(address.id)} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600">Xóa</button>
+                        {addresses.slice((addressPage - 1) * 3, addressPage * 3).map((address) => (
+                          <div
+                            key={address.id}
+                            style={{ animation: 'slideInAddress 0.3s ease' }}
+                            className={`rounded-lg border bg-white p-3 text-xs text-slate-700 shadow-sm transition-all duration-300 ${address.isDefault ? 'border-[#d70018] shadow-[0_0_0_1px_#d70018]/20' : 'border-slate-200'}`}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <p className="font-bold text-slate-900">{address.name} - {address.phone}</p>
+                                <p className="mt-1 text-slate-500">{address.detail}, {address.province}</p>
+                                <div className="mt-2 flex items-center gap-2">
+                                  {address.isDefault ? (
+                                    <span className="rounded-full bg-[#d70018] px-2 py-1 text-[10px] font-bold text-white">Đang mặc định</span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      disabled={settingDefaultId !== null}
+                                      onClick={() => setDefaultAddress(address.id)}
+                                      className="inline-flex items-center gap-1 rounded-md border border-[#d70018] px-2 py-1 text-[10px] font-semibold text-[#d70018] disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+                                    >
+                                      {settingDefaultId === address.id ? (
+                                        <>
+                                          <svg className="animate-spin w-2.5 h-2.5" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                          </svg>
+                                          Đang đặt...
+                                        </>
+                                      ) : 'Đặt mặc định'}
+                                    </button>
+                                  )}
+                                  <button type="button" onClick={() => handleAddressDelete(address.id)} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-semibold text-slate-600">Xóa</button>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                       </div>
                       <div className="flex items-center justify-center gap-2 pt-1">
                         <button type="button" disabled={addressPage === 1} onClick={() => setAddressPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">‹</button>
@@ -828,6 +853,7 @@ export default function ProfilePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="text-slate-900 font-bold uppercase tracking-wide">Lịch sử đổi mật khẩu</span>
+
                 </div>
                 <div className="flex-1 w-full min-h-[390px] p-0 flex flex-col justify-center items-center overflow-hidden mt-2">
                   {passwordHistory.length === 0 ? (
@@ -843,14 +869,14 @@ export default function ProfilePage() {
                   ) : (
                     <div className="w-full h-full flex flex-col justify-between gap-3">
                       <div className="space-y-2 overflow-y-auto">
-                      {passwordHistory.slice((passwordPage - 1) * 4, passwordPage * 4).map((entry) => (
-                        <div key={entry.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-sm">
-                          <p className="font-bold text-slate-900">Đổi mật khẩu thành công</p>
-                          <p className="mt-1 text-slate-500">
-                            {new Date(entry.changedAt).toLocaleString('vi-VN')} · IP: {entry.ipAddress}
-                          </p>
-                        </div>
-                      ))}
+                        {passwordHistory.slice((passwordPage - 1) * 4, passwordPage * 4).map((entry) => (
+                          <div key={entry.id} className="rounded-lg border border-slate-200 bg-white p-3 text-xs text-slate-700 shadow-sm">
+                            <p className="font-bold text-slate-900">Đổi mật khẩu thành công</p>
+                            <p className="mt-1 text-slate-500">
+                              {new Date(entry.changedAt).toLocaleString('vi-VN')} · IP: {entry.ipAddress}
+                            </p>
+                          </div>
+                        ))}
                       </div>
                       <div className="flex items-center justify-center gap-2 pt-1">
                         <button type="button" disabled={passwordPage === 1} onClick={() => setPasswordPage((page) => page - 1)} className="h-9 w-9 rounded-full border border-slate-200 text-slate-500 disabled:opacity-40">‹</button>

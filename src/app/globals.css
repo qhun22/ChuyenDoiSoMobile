@@ -295,3 +295,14 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
     padding: 20px;
   }
 }
+
+@keyframes slideInAddress {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

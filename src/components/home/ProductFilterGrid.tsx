@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import ProductCard from '@/components/product/ProductCard';
+import { ProductItemData } from '@/components/product/mock-products';
 
 export interface Brand {
   name: string;
@@ -274,64 +276,29 @@ export default function ProductFilterGrid({
       </div>
 
       {/* =========================================================================
-          3. DANH SÁCH CARD SẢN PHẨM
+          3. DANH SÁCH CARD SẢN PHẨM (CHUẨN 5 CỘT RESPONSIVE)
           ========================================================================= */}
       {filteredProducts && filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5">
           {filteredProducts.map((product) => {
-            const isOutOfStock = product.stock === 0;
+            const cardData: ProductItemData = {
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              brand: product.brand,
+              image: product.image || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80',
+              price: product.price,
+              original_price: product.original_price || product.price,
+              discount_percent: product.discount_percent || 0,
+              inStock: product.stock !== undefined ? product.stock > 0 : true,
+              installment0: true,
+            };
 
             return (
-              <Link
+              <ProductCard
                 key={product.id}
-                href={`/products/${product.slug}`}
-                className={`relative flex flex-col justify-between h-[340px] rounded-2xl bg-white p-3 border border-slate-200/90 shadow-sm hover:shadow-md hover:-translate-y-1 transition duration-200 ${
-                  isOutOfStock ? 'opacity-70 grayscale pointer-events-none' : ''
-                }`}
-              >
-                {product.discount_percent && product.discount_percent > 0 && (
-                  <div className="absolute top-2 left-2 z-10 bg-[#d70018] text-white text-[11px] font-black px-2 py-0.5 rounded-md shadow">
-                    -{product.discount_percent}%
-                  </div>
-                )}
-
-                {isOutOfStock && (
-                  <div className="absolute top-2 right-2 z-10 bg-slate-800 text-white text-[10px] font-bold px-2 py-0.5 rounded">
-                    Hết hàng
-                  </div>
-                )}
-
-                <div className="relative w-full h-[180px] rounded-xl overflow-hidden mb-2 flex items-center justify-center">
-                  {product.image ? (
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      unoptimized
-                      className="object-contain p-2 hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="text-xs text-slate-300">No Image</div>
-                  )}
-                </div>
-
-                <div className="flex flex-col flex-1 justify-between">
-                  <h3 className="line-clamp-2 text-xs sm:text-sm font-semibold text-slate-900 min-h-[36px] hover:text-[#d70018]">
-                    {product.name}
-                  </h3>
-
-                  <div className="mt-2 flex flex-wrap items-baseline gap-1.5">
-                    <span className="text-sm sm:text-base font-black text-[#d70018]">
-                      {formatVND(product.price)}
-                    </span>
-                    {product.original_price && product.original_price > product.price && (
-                      <span className="text-[11px] text-slate-400 line-through">
-                        {formatVND(product.original_price)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
+                product={cardData}
+              />
             );
           })}
         </div>

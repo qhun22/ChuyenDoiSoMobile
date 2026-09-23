@@ -30,10 +30,10 @@ export default function BrandScroll() {
         {/* Line mảnh mờ bên trái */}
         <div className="h-[1.5px] w-10 sm:w-16 bg-gradient-to-r from-transparent to-slate-400/40 rounded-full" />
 
-{/* Chữ đen tím nhẹ quét sáng */}
-        <h2 className="relative text-[12px] sm:text-[18px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-slate-900 via-purple-700 to-slate-900 bg-[length:200%_auto] bg-clip-text text-transparent animate-text-shimmer">
+        {/* Chữ đen tím nhẹ quét sáng */}
+        <span className="relative text-[14px] sm:text-[18px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-slate-900 via-purple-700 to-slate-900 bg-[length:200%_auto] bg-clip-text text-transparent animate-text-shimmer">
           HÃNG NỔI BẬT
-        </h2>
+        </span>
 
         {/* Line mảnh mờ bên phải */}
         <div className="h-[1.5px] w-10 sm:w-16 bg-gradient-to-l from-transparent to-slate-400/40 rounded-full" />

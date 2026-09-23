@@ -1,2 +1,25 @@
-import Link from "next/link";
-export default function AdminBrandsPage() { return <main className="store-shell admin-shell"><section className="home-section"><p className="eyebrow">Admin / Brands</p><div className="section-heading"><h1>Thuong hieu</h1><Link className="primary-button" href="/dashboard/brands/add">Them hang</Link></div><p>Quan ly danh sach thuong hieu san pham.</p></section></main>; }
+'use client';
+
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import BrandManagement from '@/components/admin/BrandManagement';
+import { useRouter } from 'next/navigation';
+
+export default function AdminBrandsPage() {
+  const router = useRouter();
+
+  const handleSelectSection = (section: string) => {
+    router.push(`/dashboard?section=${section}`);
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row w-full min-h-screen bg-white font-['Signika',sans-serif] items-stretch">
+      <AdminSidebar
+        activeSection="brands"
+        onSelectSection={handleSelectSection}
+      />
+      <main className="flex-1 w-full min-w-0 p-6 sm:p-8 bg-[#fafafa]">
+        <BrandManagement />
+      </main>
+    </div>
+  );
+}

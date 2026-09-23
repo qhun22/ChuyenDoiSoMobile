@@ -6,6 +6,7 @@ import ProductFilterGrid from '@/components/home/ProductFilterGrid';
 import VideoShortsReview from '@/components/home/VideoShortsReview';
 import UuDaiDa from '@/components/home/UuDaiDa';
 import WhyChooseUs from '@/components/home/WhyChooseUs';
+import { FEATURED_PRODUCTS } from '@/components/product/mock-products';
 
 // Danh sách hãng tương thích cho bộ lọc
 const BRANDS_DATA = [
@@ -111,7 +112,7 @@ const MOCK_PRODUCTS = [
 
 export default function HomePage() {
   return (
-    <div className="w-full pt-[9px] space-y-4">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-3 space-y-4">
       {/* 1. Header Slider Banner */}
       <HeroVideoSlider />
 
@@ -123,15 +124,15 @@ export default function HomePage() {
 
       {/* 4. Khối HotSale Hộp Tết */}
       <HotSaleBox
-        suggestedProducts={MOCK_PRODUCTS}
-        bestSellerProducts={MOCK_PRODUCTS}
-        hotSaleProducts={MOCK_PRODUCTS}
+        suggestedProducts={FEATURED_PRODUCTS}
+        bestSellerProducts={FEATURED_PRODUCTS}
+        hotSaleProducts={FEATURED_PRODUCTS}
       />
 
       {/* 5. Bộ lọc & Sản phẩm nổi bật */}
       <ProductFilterGrid
         brands={BRANDS_DATA}
-        products={MOCK_PRODUCTS}
+        products={FEATURED_PRODUCTS}
       />
 
       {/* 6. Review Sản Phẩm (Video Shorts dọc) */}

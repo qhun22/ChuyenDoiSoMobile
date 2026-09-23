@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import BrandManagement from '@/components/admin/BrandManagement';
+import ProductManagement, { AdminProductItem } from '@/components/admin/product/ProductManagement';
+import ProductDetailManagement from '@/components/admin/product/ProductDetailManagement';
 
 const SECTION_TITLES: Record<string, string> = {
   overview: 'Thống kê tổng quan',
@@ -24,10 +26,30 @@ function DashboardContent() {
   const router = useRouter();
   const initialSection = searchParams.get('section') || 'brands';
   const [activeSection, setActiveSection] = useState(initialSection);
+  const [selectedProduct, setSelectedProduct] = useState<AdminProductItem | null>(null);
+
+  useEffect(() => {
+    const s = searchParams.get('section');
+    if (s && s !== activeSection) {
+      setActiveSection(s);
+      if (s !== 'products' && s !== 'product-detail') {
+        setSelectedProduct(null);
+      }
+    }
+  }, [searchParams, activeSection]);
 
   const handleSelectSection = (section: string) => {
     setActiveSection(section);
+    setSelectedProduct(null);
     router.push(`/dashboard?section=${section}`, { scroll: false });
+  };
+
+  const handleOpenProductDetail = (p: AdminProductItem) => {
+    setSelectedProduct(p);
+  };
+
+  const handleBackToProductList = () => {
+    setSelectedProduct(null);
   };
 
   return (
@@ -40,9 +62,24 @@ function DashboardContent() {
 
       {/* CỘT PHẢI: Tràn tối đa sang mép phải */}
       <main className="flex-1 w-full min-w-0 p-6 sm:p-8 bg-[#fafafa]">
+        {/* QUẢN LÝ HÃNG */}
         {activeSection === 'brands' && <BrandManagement />}
 
-        {activeSection !== 'brands' && (
+        {/* QUẢN LÝ SẢN PHẨM & CHI TIẾT SẢN PHẨM */}
+        {activeSection === 'products' && (
+          selectedProduct ? (
+            <ProductDetailManagement
+              product={selectedProduct}
+              onBack={handleBackToProductList}
+              onUpdateProduct={(updated) => setSelectedProduct(updated)}
+            />
+          ) : (
+            <ProductManagement onOpenDetail={handleOpenProductDetail} />
+          )
+        )}
+
+        {/* CÁC MỤC KHÁC ĐANG PHÁT TRIỂN */}
+        {activeSection !== 'brands' && activeSection !== 'products' && (
           <div className="w-full py-16 text-center bg-white rounded-xl border border-slate-100 p-8 shadow-2xs">
             <div className="w-14 h-14 rounded-2xl bg-slate-100 text-slate-500 mx-auto flex items-center justify-center mb-3">
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -53,15 +90,24 @@ function DashboardContent() {
               {SECTION_TITLES[activeSection] || `Khu vực ${activeSection.toUpperCase()}`}
             </h2>
             <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
-              Chức năng đang được kết nối với cơ sở dữ liệu. Vui lòng chuyển sang mục &ldquo;Quản lý hãng&rdquo; để trải nghiệm.
+              Chức năng đang được kết nối với cơ sở dữ liệu. Vui lòng chuyển sang mục &ldquo;Quản lý hãng&rdquo; hoặc &ldquo;Quản lý sản phẩm&rdquo; để trải nghiệm.
             </p>
-            <button
-              type="button"
-              onClick={() => handleSelectSection('brands')}
-              className="mt-4 px-5 py-2.5 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white font-bold text-xs shadow-xs transition cursor-pointer"
-            >
-              Chuyển về Quản lý hãng
-            </button>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <button
+                type="button"
+                onClick={() => handleSelectSection('brands')}
+                className="px-4 py-2 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white font-bold text-xs shadow-xs transition cursor-pointer"
+              >
+                Quản lý hãng
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectSection('products')}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold text-xs transition cursor-pointer"
+              >
+                Quản lý sản phẩm
+              </button>
+            </div>
           </div>
         )}
       </main>

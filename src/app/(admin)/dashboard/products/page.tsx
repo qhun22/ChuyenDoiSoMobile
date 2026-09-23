@@ -1,2 +1,36 @@
-import Link from "next/link";
-export default function AdminProductsPage() { return <main className="store-shell admin-shell"><section className="home-section"><p className="eyebrow">Admin / Products</p><div className="section-heading"><h1>San pham</h1><Link className="primary-button" href="/dashboard/products/add">Them san pham</Link></div><p>Quan ly ten, gia, ton kho va cau hinh san pham.</p></section></main>; }
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import AdminSidebar from '@/components/admin/AdminSidebar';
+import ProductManagement, { AdminProductItem } from '@/components/admin/product/ProductManagement';
+import ProductDetailManagement from '@/components/admin/product/ProductDetailManagement';
+
+export default function AdminProductsPage() {
+  const router = useRouter();
+  const [selectedProduct, setSelectedProduct] = useState<AdminProductItem | null>(null);
+
+  const handleSelectSection = (section: string) => {
+    router.push(`/dashboard?section=${section}`);
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row w-full min-h-screen bg-white font-['Signika',sans-serif] items-stretch">
+      <AdminSidebar
+        activeSection="products"
+        onSelectSection={handleSelectSection}
+      />
+      <main className="flex-1 w-full min-w-0 p-6 sm:p-8 bg-[#fafafa]">
+        {selectedProduct ? (
+          <ProductDetailManagement
+            product={selectedProduct}
+            onBack={() => setSelectedProduct(null)}
+            onUpdateProduct={(updated) => setSelectedProduct(updated)}
+          />
+        ) : (
+          <ProductManagement onOpenDetail={(p) => setSelectedProduct(p)} />
+        )}
+      </main>
+    </div>
+  );
+}

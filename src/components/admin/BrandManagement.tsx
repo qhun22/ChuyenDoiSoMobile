@@ -226,9 +226,6 @@ export default function BrandManagement() {
             onClick={openAddModal}
             className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white font-semibold text-xs shadow-xs transition active:scale-95 cursor-pointer shrink-0"
           >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-            </svg>
             <span>Thêm hãng</span>
           </button>
         </div>

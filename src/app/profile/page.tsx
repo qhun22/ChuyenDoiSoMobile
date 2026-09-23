@@ -767,12 +767,12 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="w-full h-full flex flex-col justify-between gap-3">
-                      <div className="space-y-2 overflow-y-auto">
+                      <div className="space-y-2 overflow-visible">
                         {addresses.slice((addressPage - 1) * 3, addressPage * 3).map((address) => (
                           <div
                             key={address.id}
                             style={{ animation: 'slideInAddress 0.3s ease' }}
-                            className={`rounded-lg border bg-white p-3 text-xs text-slate-700 shadow-sm transition-all duration-200 hover:shadow-md hover:-translate-y-[2px] cursor-default ${address.isDefault ? 'border-[#d70018] shadow-[0_0_0_1px_rgba(215,0,24,0.15)]' : 'border-slate-200 hover:border-slate-300'}`}
+                            className={`rounded-lg border bg-white p-3 text-xs text-slate-700 shadow-sm transition-all duration-200 hover:shadow-md cursor-default ${address.isDefault ? 'border-[#d70018] shadow-[0_0_0_1px_rgba(215,0,24,0.15)]' : 'border-slate-200 hover:border-slate-300'}`}
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">

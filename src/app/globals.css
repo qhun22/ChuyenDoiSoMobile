@@ -121,6 +121,7 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
   gap: 8px !important;
   min-width: 260px !important;
   max-width: 360px !important;
+  overflow: hidden !important;
   opacity: 0;
   transform: translateX(110%) !important;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -137,17 +138,20 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
   transform: translateX(120%) !important;
 }
 
+/* Progress bar: dùng scaleX thay vì width để giữ border-radius đều 2 góc */
 .notification-toast::after {
   content: '' !important;
   position: absolute !important;
   left: 0 !important;
   bottom: 0 !important;
   height: 3px !important;
-  width: 100%;
+  width: 100% !important;
   border-radius: 0 0 8px 8px !important;
   background: #d70018 !important;
+  transform: scaleX(0) !important;
+  transform-origin: left center !important;
   animation: none !important;
-  will-change: width;
+  will-change: transform;
 }
 
 .notification-toast[data-mounted='true']::after {
@@ -171,13 +175,12 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
   background: #f1f5f9 !important;
 }
 
+/* Animate scaleX từ 1 (full) → 0 (empty), transform-origin: left
+   → border-radius KHÔNG thay đổi vì chỉ scale theo trục X
+   → góc dưới luôn bo tròn đều, không bị vuông khi gần hết */
 @keyframes notification-progress {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0;
-  }
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
 }
 
 .notification-icon {

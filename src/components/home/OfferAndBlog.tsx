@@ -41,21 +41,39 @@ const BANNERS_DATA: BannerItem[] = [
 export default function OfferAndBlog() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [withTransition, setWithTransition] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
   const totalItems = BANNERS_DATA.length; // 4
   const isJumpingRef = useRef(false);
 
   // Mảng mở rộng thêm các phần tử đầu để loop mượt 1-2 -> 2-3 -> 3-4 -> 4-1
   const extendedBanners = [...BANNERS_DATA, ...BANNERS_DATA, ...BANNERS_DATA.slice(0, 2)];
 
+  const resetToStart = () => {
+    isJumpingRef.current = true;
+    setWithTransition(false);
+    setCurrentIndex(0);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        isJumpingRef.current = false;
+        setWithTransition(true);
+      });
+    });
+  };
+
   const handleNext = () => {
     if (isJumpingRef.current) return;
     setWithTransition(true);
-    setCurrentIndex((prev) => prev + 1);
+    setCurrentIndex((prev) => {
+      if (prev >= totalItems) {
+        return 1;
+      }
+      return prev + 1;
+    });
   };
 
   const handlePrev = () => {
     if (isJumpingRef.current) return;
-    if (currentIndex === 0) {
+    if (currentIndex <= 0) {
       // Nhảy không animation tới cuối rồi lùi
       setWithTransition(false);
       setCurrentIndex(totalItems);
@@ -74,65 +92,74 @@ export default function OfferAndBlog() {
   // Xử lý Infinite Loop không giật khi hoàn tất transition
   const handleTransitionEnd = () => {
     if (currentIndex >= totalItems) {
-      // Khi đã lướt mượt xong sang 4-1 (index 4), lập tức reset về 0 mà không có transition
-      isJumpingRef.current = true;
-      setWithTransition(false);
-      setCurrentIndex(currentIndex - totalItems);
-      // Mở lại transition ở frame tiếp theo
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          isJumpingRef.current = false;
-          setWithTransition(true);
-        });
-      });
+      resetToStart();
     }
   };
 
+  // Fallback an toàn: nếu tab ẩn hoặc transitionend không kích hoạt đúng hạn
   useEffect(() => {
+    if (currentIndex >= totalItems) {
+      const fallbackTimer = setTimeout(() => {
+        resetToStart();
+      }, 750);
+      return () => clearTimeout(fallbackTimer);
+    }
+  }, [currentIndex, totalItems]);
+
+  // Autoplay có kiểm tra tab ẩn và tạm dừng khi hover
+  useEffect(() => {
+    if (isHovered) return;
     const timer = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return;
       handleNext();
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [isHovered]);
 
   return (
-    <section className="relative w-full group overflow-hidden rounded-2xl mb-10 select-none border border-black/10 shadow-sm">
-      {/* Container căn lề cân bằng */}
-      <div className="-mx-1.5 sm:-mx-2 relative">
-        <div
-          onTransitionEnd={handleTransitionEnd}
-          className="flex"
-          style={{
-            transform: `translate3d(-${currentIndex * 50}%, 0, 0)`,
-            transition: withTransition
-              ? 'transform 700ms cubic-bezier(0.25, 1, 0.5, 1)'
-              : 'none',
-          }}
-        >
-          {extendedBanners.map((banner, index) => (
-            <div
-              key={`${banner.id}-${index}`}
-              className="w-1/2 shrink-0 px-1.5 sm:px-2"
-            >
-              <Link
-                href={banner.link}
-                className="relative block w-full aspect-[28/9] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-200 hover:-translate-y-0.5 bg-slate-100 isolate [transform:translateZ(0)]"
+    <section
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative w-full group mb-6 select-none"
+    >
+      {/* Container cắt góc và giới hạn hiển thị */}
+      <div className="overflow-hidden rounded-2xl">
+        <div className="-mx-1.5 sm:-mx-2 relative">
+          <div
+            onTransitionEnd={handleTransitionEnd}
+            className="flex"
+            style={{
+              transform: `translate3d(-${currentIndex * 50}%, 0, 0)`,
+              transition: withTransition
+                ? 'transform 700ms cubic-bezier(0.25, 1, 0.5, 1)'
+                : 'none',
+            }}
+          >
+            {extendedBanners.map((banner, index) => (
+              <div
+                key={`${banner.id}-${index}`}
+                className="w-1/2 shrink-0 px-1.5 sm:px-2"
               >
-                <Image
-                  src={banner.image}
-                  alt={banner.title}
-                  fill
-                  unoptimized
-                  className="object-cover rounded-2xl pointer-events-none"
-                  sizes="(max-width: 768px) 50vw, 50vw"
-                  priority
-                />
-              </Link>
-            </div>
-          ))}
+                {/* Từng box có viền và shadow riêng biệt, hover không nảy/nổi lên */}
+                <Link
+                  href={banner.link}
+                  className="relative block w-full aspect-[28/9] rounded-2xl overflow-hidden border border-black/10 shadow-sm bg-slate-100 isolate [transform:translateZ(0)] transition-opacity hover:opacity-95"
+                >
+                  <Image
+                    src={banner.image}
+                    alt={banner.title}
+                    fill
+                    unoptimized
+                    className="object-cover rounded-2xl pointer-events-none"
+                    sizes="(max-width: 768px) 50vw, 50vw"
+                    priority
+                  />
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-
 
       {/* Nút lùi (Prev) */}
       <button

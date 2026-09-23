@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 type ProfileTab = 'dashboard' | 'address' | 'password' | 'student' | 'coupon' | 'history' | 'refund';
 
@@ -15,9 +16,19 @@ interface UserProfile {
   isSuperuser?: boolean;
 }
 
+interface Address {
+  id: number;
+  name: string;
+  phone: string;
+  province: string;
+  detail: string;
+  isDefault: boolean;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<ProfileTab>('address');
+  const [addresses, setAddresses] = useState<Address[]>([]);
 
   // Dữ liệu mẫu hiển thị (sau này nối API Django chỉ cần thay vào state này)
   const [user, setUser] = useState<UserProfile>({
@@ -46,11 +57,45 @@ export default function ProfilePage() {
     }
   }, []);
 
-  const handleLogout = () => {
+  const executeLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_info');
+    toast.info('Đã đăng xuất tài khoản');
     router.push('/login');
+  };
+
+  const handleLogout = () => {
+    toast('Bạn có chắc chắn muốn đăng xuất?', {
+      description: 'Phiên làm việc hiện tại sẽ kết thúc.',
+      action: { label: 'Đăng xuất', onClick: executeLogout },
+      cancel: { label: 'Hủy', onClick: () => {} },
+    });
+  };
+
+  const handleAddressSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    setAddresses((currentAddresses) => [...currentAddresses, {
+      id: Date.now(),
+      name: String(form.get('name') || ''),
+      phone: String(form.get('phone') || ''),
+      province: String(form.get('province') || ''),
+      detail: String(form.get('detail') || ''),
+      isDefault: form.get('isDefault') === 'on',
+    }]);
+    event.currentTarget.reset();
+    toast.success('Thêm địa chỉ mới thành công!');
+  };
+
+  const handleAddressDelete = (addressId: number) => {
+    toast('Bạn có chắc chắn muốn xóa địa chỉ này?', {
+      action: {
+        label: 'Xóa',
+        onClick: () => setAddresses((currentAddresses) => currentAddresses.filter(({ id }) => id !== addressId)),
+      },
+      cancel: { label: 'Hủy', onClick: () => {} },
+    });
   };
 
   const formatVND = (num: number) => {
@@ -288,7 +333,7 @@ export default function ProfilePage() {
                   <span className="text-slate-900">Thêm địa chỉ mới</span>
                 </div>
 
-                <form className="space-y-3.5 pt-1">
+                <form className="space-y-3.5 pt-1" onSubmit={handleAddressSubmit}>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -296,6 +341,7 @@ export default function ProfilePage() {
                       </label>
                       <input
                         type="text"
+                        name="name"
                         placeholder="Nhập họ tên"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                         required
@@ -307,6 +353,7 @@ export default function ProfilePage() {
                       </label>
                       <input
                         type="tel"
+                        name="phone"
                         placeholder="Nhập số điện thoại"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                         required
@@ -319,6 +366,7 @@ export default function ProfilePage() {
                       Tỉnh/Thành phố
                     </label>
                     <select
+                      name="province"
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50 text-slate-600"
                       required
                     >
@@ -357,6 +405,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
+                      name="detail"
                       placeholder="Số nhà, tên đường, tòa nhà..."
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                       required
@@ -367,6 +416,7 @@ export default function ProfilePage() {
                     <input
                       type="checkbox"
                       id="addrDefault"
+                      name="isDefault"
                       className="w-4 h-4 rounded border-slate-300 text-[#d70018] accent-[#d70018] cursor-pointer"
                     />
                     <label htmlFor="addrDefault" className="text-xs text-slate-600 select-none cursor-pointer">
@@ -395,6 +445,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Empty State: Icon vị trí + Text thông báo đúng ảnh mẫu */}
+                {addresses.length === 0 ? (
                 <div className="w-full flex-1 min-h-[340px] flex flex-col items-center justify-center text-center p-8 rounded-2xl border border-dashed border-slate-200 bg-slate-50/40">
                   <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-3.5">
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -409,6 +460,24 @@ export default function ProfilePage() {
                     Thêm địa chỉ giao hàng ở bên trái nhé!
                   </p>
                 </div>
+                ) : (
+                  <div className="space-y-3">
+                    {addresses.map((address) => (
+                      <div key={address.id} className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="font-bold text-slate-900">{address.name} - {address.phone}</p>
+                            <p className="mt-1">{address.detail}, {address.province}</p>
+                            {address.isDefault && <span className="mt-2 inline-block text-xs font-semibold text-[#d70018]">Mặc định</span>}
+                          </div>
+                          <button type="button" onClick={() => handleAddressDelete(address.id)} className="text-xs font-semibold text-[#d70018] hover:underline">
+                            Xóa
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
             </div>

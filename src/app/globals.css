@@ -83,3 +83,115 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
 .animate-text-shimmer {
   animation: text-shimmer 3s ease-in-out infinite;
 }
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
+.notification-container {
+  position: fixed !important;
+  top: 90px !important;
+  right: 24px !important;
+  z-index: 99999 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.notification-toast {
+  --y: translateX(110%);
+  --toast-close-button-start: unset;
+  --toast-close-button-end: 12px;
+  --toast-close-button-transform: translateY(-50%);
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 32px rgb(15 23 42 / 12%) !important;
+  padding: 12px 40px 16px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 260px !important;
+  max-width: 360px !important;
+  opacity: 0;
+  transform: translateX(110%) !important;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.notification-toast[data-mounted='true'] {
+  opacity: 1;
+  --y: translateX(0);
+  transform: translateX(0) !important;
+}
+
+.notification-toast[data-removed='true'] {
+  opacity: 0 !important;
+  transform: translateX(120%) !important;
+}
+
+.notification-toast::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 0 !important;
+  bottom: 0 !important;
+  height: 3px !important;
+  width: 100%;
+  border-radius: 0 0 8px 8px !important;
+  background: #d70018 !important;
+  animation: none !important;
+  will-change: width;
+}
+
+.notification-toast[data-mounted='true']::after {
+  animation: notification-progress 5s linear both !important;
+}
+
+.notification-toast [data-close-button] {
+  left: auto !important;
+  right: 8px !important;
+  top: 50% !important;
+  width: 18px !important;
+  height: 18px !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: 0 !important;
+  transform: translateY(-50%) !important;
+}
+
+.notification-toast [data-close-button]:hover {
+  color: #17211f !important;
+  background: #f1f5f9 !important;
+}
+
+@keyframes notification-progress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0;
+  }
+}
+
+.notification-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.notification-text {
+  flex: 1 !important;
+  font-size: 13px !important;
+  color: #17211f !important;
+  line-height: 1.4 !important;
+}
+
+@media (max-width: 640px) {
+  .notification-container {
+    top: 76px !important;
+    right: 16px !important;
+    left: 16px !important;
+  }
+
+  .notification-toast {
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}

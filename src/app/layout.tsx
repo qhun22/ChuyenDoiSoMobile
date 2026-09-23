@@ -4,6 +4,7 @@ import Footer from '@/components/common/Footer';
 import FloatingContact from '@/components/common/FloatingContact';
 import ScrollToTop from '@/components/common/ScrollToTop';
 import CompareBar from '@/components/common/CompareBar';
+import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -39,6 +40,21 @@ export default function RootLayout({
           <ScrollToTop />
           <CompareBar />
         </div>
+        <Toaster
+          position="top-right"
+          closeButton
+          duration={5000}
+          gap={12}
+          className="notification-container"
+          toastOptions={{
+            classNames: {
+              toast: 'notification-toast',
+              title: 'notification-text',
+              description: 'notification-text',
+              icon: 'notification-icon',
+            },
+          }}
+        />
       </body>
     </html>
   );

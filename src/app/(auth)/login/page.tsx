@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
+import { toast } from 'sonner';
 
 type AuthMode = 'login' | 'register' | 'forgot';
 
@@ -12,7 +13,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string>('');
   const turnstileRef = useRef<TurnstileInstance>(null);
 
@@ -23,22 +23,20 @@ export default function LoginPage() {
   const switchMode = (newMode: AuthMode) => {
     if (newMode === mode) return;
     setTurnstileToken('');
-    setErrorMessage('');
     turnstileRef.current?.reset();
     setMode(newMode);
   };
 
   const handleLoginSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    setErrorMessage('');
 
     if (!email.trim() || !password) {
-      setErrorMessage('Vui lòng nhập email và mật khẩu.');
+      toast.warning('Vui lòng nhập đầy đủ email và mật khẩu');
       return;
     }
 
     if (!turnstileToken) {
-      setErrorMessage('Vui lòng xác thực Cloudflare Turnstile');
+      toast.warning('Vui lòng hoàn tất xác thực Turnstile CAPTCHA');
       return;
     }
 
@@ -63,9 +61,11 @@ export default function LoginPage() {
       if (data.access_token) localStorage.setItem('access_token', data.access_token);
       if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
       if (data.user) localStorage.setItem('user_info', JSON.stringify(data.user));
+      toast.success('Đăng nhập thành công! Đang chuyển hướng...');
       router.push('/profile');
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Đăng nhập thất bại.');
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(message || 'Đăng nhập thất bại!');
       setTurnstileToken('');
       turnstileRef.current?.reset();
     } finally {
@@ -167,12 +167,6 @@ export default function LoginPage() {
               >
                 {isLoading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP'}
               </button>
-
-              {errorMessage && (
-                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-center text-sm text-red-700">
-                  {errorMessage}
-                </div>
-              )}
 
               <div className="relative my-2 text-center">
                 <div className="absolute inset-0 flex items-center">

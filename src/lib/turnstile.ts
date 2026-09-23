@@ -1,8 +1,12 @@
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-const FALLBACK_TURNSTILE_SECRET = '0x4AAAAAAE_tRiGFPZCrBWNBeD_5OzY95es';
 
 export async function verifyTurnstileToken(token: string): Promise<boolean> {
-  const secret = process.env.TURNSTILE_SECRET_KEY || FALLBACK_TURNSTILE_SECRET;
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) {
+    console.error("Missing TURNSTILE_SECRET_KEY environment variable");
+    return false;
+  }
+
   try {
     const response = await fetch(TURNSTILE_VERIFY_URL, {
       method: 'POST',

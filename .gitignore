@@ -31,8 +31,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# environment files
+.env
+.env.local
+.env.*
+.env.*.local
 
 # vercel
 .vercel
@@ -41,6 +44,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local development runner and environment files
-.env*.local
+# local development runner
 run_dev.bat

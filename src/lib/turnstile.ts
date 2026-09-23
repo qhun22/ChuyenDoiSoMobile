@@ -2,8 +2,15 @@ const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/sit
 
 export async function verifyTurnstileToken(token: string): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const allowDevelopmentBypass = process.env.TURNSTILE_DEV_BYPASS !== 'false';
+
+  if (isDevelopment && allowDevelopmentBypass) {
+    return true;
+  }
+
   if (!secret) {
-    console.error("Missing TURNSTILE_SECRET_KEY environment variable");
+    console.error('Missing TURNSTILE_SECRET_KEY environment variable');
     return false;
   }
 

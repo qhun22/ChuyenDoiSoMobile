@@ -87,7 +87,13 @@ legend { font-family: Arial, sans-serif; font-size: .7rem; margin-bottom: 12px; 
 /* ==================== TOAST NOTIFICATIONS ==================== */
 .profile-page {
   --profile-content-offset-y: -25px;
-  transform: translateY(var(--profile-content-offset-y));
+  position: relative;
+  top: var(--profile-content-offset-y);
+}
+
+.profile-page,
+.profile-page * {
+  font-family: 'Signika', sans-serif;
 }
 
 .notification-container {

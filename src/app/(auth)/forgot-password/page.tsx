@@ -33,7 +33,7 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full bg-[#f8fafc] py-6 sm:py-8 font-['Signika',sans-serif]">
-      <div className="mx-auto max-w-[1250px] px-4 space-y-4">
+      <div className="w-full space-y-4">
         
         {/* =========================================================================
             KHỐI 1: THẺ THÔNG TIN NGƯỜI DÙNG & THỐNG KÊ (Card trắng trên cùng)

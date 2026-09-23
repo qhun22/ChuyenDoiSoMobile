@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [registerName, setRegisterName] = useState('');
   const [registerEmail, setRegisterEmail] = useState('');
-  const [registerOtp, setRegisterOtp] = useState('');
   const [registerPhone, setRegisterPhone] = useState('');
   const [registerPassword, setRegisterPassword] = useState('');
   const [registerPasswordConfirmation, setRegisterPasswordConfirmation] = useState('');
@@ -36,7 +35,7 @@ export default function LoginPage() {
     setMode(newMode);
   };
 
-  const handleLoginSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLoginSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!email.trim() || !password) {
@@ -75,7 +74,7 @@ export default function LoginPage() {
         localStorage.setItem('user_info', JSON.stringify(data.user));
         window.dispatchEvent(new Event('auth-state-changed'));
       }
-      router.push('/profile');
+      router.push('/');
     } catch (error) {
       const message = error instanceof Error ? error.message : undefined;
       toast.error(message || 'Đăng nhập thất bại!');
@@ -86,11 +85,21 @@ export default function LoginPage() {
     }
   };
 
-  const handleRegisterSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleRegisterSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!registerName.trim() || !registerEmail.trim() || !registerPhone.trim() || !registerPassword || !registerPasswordConfirmation) {
       toast.warning('Vui lòng nhập đầy đủ thông tin đăng ký');
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(registerEmail.trim())) {
+      toast.warning('Email không đúng định dạng');
+      return;
+    }
+
+    if (!/^\+?[0-9\s-]{9,15}$/.test(registerPhone.trim())) {
+      toast.warning('Số điện thoại không đúng định dạng');
       return;
     }
 
@@ -118,8 +127,8 @@ export default function LoginPage() {
           full_name: registerName.trim(),
           email: registerEmail.trim(),
           phone: registerPhone.trim(),
-          otp: registerOtp.trim(),
           password: registerPassword,
+          password_confirmation: registerPasswordConfirmation,
           turnstile_token: turnstileToken,
         }),
       });
@@ -147,9 +156,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-130px)] flex items-center justify-center py-4 px-4 font-['Signika',sans-serif]">
+    <div className="w-full min-h-[calc(100vh-130px)] flex items-center justify-center py-4 font-['Signika',sans-serif]">
       {/* Khung ngoài max-w-[1250px] ăn khớp tuyệt đối với Header và Slider */}
-      <div className="relative w-full max-w-[1250px] h-[630px] bg-white rounded-3xl overflow-hidden border border-slate-100 grid grid-cols-1 md:grid-cols-12 -translate-y-[11px]">
+      <div className="relative w-full h-[630px] bg-white rounded-3xl overflow-hidden border border-slate-100 grid grid-cols-1 md:grid-cols-12 -translate-y-[11px]">
         
         {/* =========================================================================
             CỘT TRÁI: FORM NỘI DUNG ĐÃ DÃN RỘNG RA max-w-[540px]
@@ -164,7 +173,7 @@ export default function LoginPage() {
                 : 'opacity-0 -translate-x-12 absolute pointer-events-none'
             }`}
           >
-            <div className="space-y-3.5">
+            <form className="space-y-3.5" onSubmit={handleLoginSubmit}>
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
                   EMAIL
@@ -242,8 +251,7 @@ export default function LoginPage() {
               </div>
 
               <button
-                type="button"
-                onClick={handleLoginSubmit}
+                type="submit"
                 disabled={isLoading}
                 className="w-full py-3 rounded-xl bg-[#d70018] text-white font-bold text-sm tracking-wider uppercase shadow-sm hover:bg-[#bf0015] active:scale-[0.99] transition cursor-pointer"
               >
@@ -280,7 +288,7 @@ export default function LoginPage() {
                   Đăng ký ngay
                 </button>
               </div>
-            </div>
+            </form>
           </div>
 
           {/* 2. FORM ĐĂNG KÝ: DÃN RỘNG 540PX RÕ RÀNG */}
@@ -291,7 +299,7 @@ export default function LoginPage() {
                 : 'opacity-0 translate-x-12 absolute pointer-events-none'
             }`}
           >
-            <div className="space-y-2.5">
+            <form className="space-y-2.5" onSubmit={handleRegisterSubmit}>
               <div>
                 <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1">
                   HỌ TÊN
@@ -317,29 +325,10 @@ export default function LoginPage() {
                     placeholder="Nhập email"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                   />
-                  <button
-                    type="button"
-                    className="shrink-0 px-5 py-2.5 rounded-xl bg-[#d70018] text-white text-xs sm:text-sm font-bold hover:bg-[#bf0015] transition cursor-pointer"
-                  >
-                    Lấy mã
-                  </button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1">
-                    MÃ OTP
-                  </label>
-                  <input
-                    type="text"
-                    value={registerOtp}
-                    onChange={(event) => setRegisterOtp(event.target.value)}
-                    placeholder="Mã về email"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
-                  />
-                </div>
-                <div>
+              <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1">
                     SỐ ĐIỆN THOẠI
                   </label>
@@ -350,7 +339,6 @@ export default function LoginPage() {
                     placeholder="Số điện thoại"
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                   />
-                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3.5">
@@ -380,7 +368,7 @@ export default function LoginPage() {
                       type={showRegisterPasswordConfirmation ? 'text' : 'password'}
                       value={registerPasswordConfirmation}
                       onChange={(event) => setRegisterPasswordConfirmation(event.target.value)}
-                      placeholder="Nhập lại MK"
+                      placeholder="Nhập lại mật khẩu"
                       className="w-full px-4 pr-12 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:border-[#d70018] bg-slate-50/50"
                     />
                     <button type="button" onClick={() => setShowRegisterPasswordConfirmation((isVisible) => !isVisible)} aria-label={showRegisterPasswordConfirmation ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'} tabIndex={-1} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
@@ -403,8 +391,7 @@ export default function LoginPage() {
               </div>
 
               <button
-                type="button"
-                onClick={handleRegisterSubmit}
+                type="submit"
                 disabled={isLoading}
                 className="w-full py-3 rounded-xl bg-[#d70018] text-white font-bold text-sm tracking-wider uppercase shadow hover:bg-[#bf0015] active:scale-[0.99] transition cursor-pointer"
               >
@@ -421,7 +408,7 @@ export default function LoginPage() {
                   Đăng nhập ngay
                 </button>
               </div>
-            </div>
+            </form>
           </div>
 
           {/* 3. FORM QUÊN MẬT KHẨU */}

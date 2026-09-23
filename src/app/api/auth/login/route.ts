@@ -1,6 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { D1Database } from '@cloudflare/workers-types';
 import { verifyTurnstileToken } from '@/lib/turnstile';
+import { createDevAccessToken, findDevUser, findDevUserFromRequest, type DevAuthUser } from '@/lib/dev-auth-store';
 
 export const runtime = 'edge';
 
@@ -25,25 +26,41 @@ type LoginEnv = CloudflareEnv & { DB: D1Database };
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-function createDevelopmentLoginResponse() {
-  const userId = 'dev-admin';
-
+function createDevelopmentLoginResponse(user: DevAuthUser = {
+  id: 'dev-admin',
+  email: 'admin@gmail.com',
+  password: 'admin123',
+  name: 'QUANG HUY',
+  phone: '',
+  role: 'admin',
+}) {
   return Response.json({
     success: true,
     message: 'Đăng nhập thành công',
     user: {
-      id: userId,
-      email: 'admin@gmail.com',
-      name: 'Admin Dev',
-      phone: '',
-      role: 'admin',
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+      role: user.role,
       totalOrders: 0,
       totalSpent: 0,
       rank: 'diamond',
-      isSuperuser: true,
+      isSuperuser: user.role === 'admin',
     },
-    access_token: `cf_token_${userId}_${Date.now()}`,
+    access_token: createDevAccessToken(user.id),
   });
+}
+
+function findDevelopmentLoginUser(request: Request, email: string, password: string) {
+  if (email === 'admin@gmail.com' && password === 'admin123') {
+    return createDevelopmentLoginResponse();
+  }
+
+  const user = findDevUser(email);
+  const cookieUser = findDevUserFromRequest(request, email, password);
+  const validUser = user && user.password === password ? user : cookieUser;
+  return validUser ? createDevelopmentLoginResponse(validUser) : null;
 }
 
 export async function POST(request: Request) {
@@ -67,23 +84,38 @@ export async function POST(request: Request) {
     return Response.json({ message: 'Xác minh CAPTCHA không hợp lệ hoặc đã hết hạn' }, { status: 400 });
   }
 
+  let runtimeEnv: LoginEnv | undefined;
+
   try {
     const { env } = await getCloudflareContext({ async: true });
-    const runtimeEnv = env as LoginEnv;
-
-    if (!runtimeEnv.DB) {
-      if (isDevelopment && email === 'admin@gmail.com' && password === 'admin123') {
-        return createDevelopmentLoginResponse();
-      }
-
-      return Response.json({ message: 'D1 database chưa được cấu hình trên Worker.' }, { status: 500 });
+    runtimeEnv = env as LoginEnv;
+  } catch (error) {
+    if (isDevelopment) {
+      return findDevelopmentLoginUser(request, email, password) ?? Response.json({ message: 'Email hoặc mật khẩu không chính xác' }, { status: 401 });
     }
 
+    console.error('Cloudflare context unavailable during login:', error);
+    return Response.json({ message: 'Không thể kết nối môi trường Cloudflare.' }, { status: 500 });
+  }
+
+  if (!runtimeEnv.DB) {
+    if (isDevelopment) {
+      return findDevelopmentLoginUser(request, email, password) ?? Response.json({ message: 'Email hoặc mật khẩu không chính xác' }, { status: 401 });
+    }
+
+    return Response.json({ message: 'D1 database chưa được cấu hình trên Worker.' }, { status: 500 });
+  }
+
+  try {
     const result = await runtimeEnv.DB.prepare(
       'SELECT * FROM users WHERE email = ? AND password_hash = ?',
     )
       .bind(email, password)
       .first<LoginUserRow>();
+
+    if (!result && isDevelopment) {
+      return findDevelopmentLoginUser(request, email, password) ?? Response.json({ message: 'Email hoặc mật khẩu không chính xác' }, { status: 401 });
+    }
 
     if (!result) {
       return Response.json({ message: 'Email hoặc mật khẩu không chính xác' }, { status: 401 });
@@ -106,8 +138,8 @@ export async function POST(request: Request) {
       access_token: `cf_token_${result.id}_${Date.now()}`,
     });
   } catch (error) {
-    if (isDevelopment && email === 'admin@gmail.com' && password === 'admin123') {
-      return createDevelopmentLoginResponse();
+    if (isDevelopment) {
+      return findDevelopmentLoginUser(request, email, password) ?? Response.json({ message: 'Email hoặc mật khẩu không chính xác' }, { status: 401 });
     }
 
     console.error('Auth login failed:', error);

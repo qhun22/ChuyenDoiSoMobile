@@ -27,6 +27,14 @@ export default function RegisterPage() {
 			toast.warning('Vui lòng nhập đầy đủ thông tin đăng ký');
 			return;
 		}
+		if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+			toast.warning('Email không đúng định dạng');
+			return;
+		}
+		if (!/^\+?[0-9\s-]{9,15}$/.test(phone.trim())) {
+			toast.warning('Số điện thoại không đúng định dạng');
+			return;
+		}
 		if (password.length < 6) {
 			toast.warning('Mật khẩu phải có ít nhất 6 ký tự');
 			return;
@@ -45,7 +53,7 @@ export default function RegisterPage() {
 			const response = await fetch('/api/auth/register', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ full_name: name.trim(), email: email.trim(), phone: phone.trim(), password, turnstile_token: turnstileToken }),
+				body: JSON.stringify({ full_name: name.trim(), email: email.trim(), phone: phone.trim(), password, password_confirmation: passwordConfirmation, turnstile_token: turnstileToken }),
 			});
 			const data = await response.json().catch(() => ({}));
 			if (!response.ok) throw new Error(data.detail || data.message || 'Đăng ký thất bại!');
@@ -60,7 +68,7 @@ export default function RegisterPage() {
 	};
 
 	return (
-		<main className="w-full min-h-[calc(100vh-130px)] flex items-center justify-center py-8 px-4 font-['Signika',sans-serif]">
+		<main className="w-full min-h-[calc(100vh-130px)] flex items-center justify-center py-8 font-['Signika',sans-serif]">
 			<section className="w-full max-w-lg rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
 				<div className="mb-6 text-center">
 					<p className="text-xs font-bold uppercase tracking-wider text-[#d70018]">Tạo tài khoản</p>

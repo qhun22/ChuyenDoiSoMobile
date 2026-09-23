@@ -826,7 +826,7 @@ export default function ProfilePage() {
                   </svg>
                   <span className="text-slate-900 font-bold uppercase tracking-wide">Lịch sử đổi mật khẩu</span>
                 </div>
-                <div className="flex-1 w-full min-h-[390px] p-4 flex flex-col justify-center items-center overflow-hidden mt-2">
+                <div className="flex-1 w-full min-h-[390px] p-0 flex flex-col justify-center items-center overflow-hidden mt-2">
                   {passwordHistory.length === 0 ? (
                     <div className="w-full flex flex-col items-center justify-center text-center p-4">
                       <svg className="w-14 h-14 text-slate-300 mb-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

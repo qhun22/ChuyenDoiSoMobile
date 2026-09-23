@@ -133,7 +133,8 @@ export async function POST(request: Request) {
   const shouldBeDefault = Boolean(body.isDefault || !firstAddress);
   if (shouldBeDefault) await database.prepare(`UPDATE addresses SET is_default = 0 WHERE ${where.sql}`).bind(...where.values).run();
   const email = identity.email || identity.id;
-  const result = await database.prepare('INSERT INTO addresses (user_email, user_id, name, phone, province, detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)').bind(email, identity.id || null, name, phone, province, detail, shouldBeDefault ? 1 : 0).run();
+  const legacyUserId = identity.id || 0;
+  const result = await database.prepare('INSERT INTO addresses (user_email, user_id, name, full_name, phone, province, district, ward, detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(email, legacyUserId, name, name, phone, province, '', province, detail, shouldBeDefault ? 1 : 0).run();
   return Response.json({ address: toAddress({ id: Number(result.meta.last_row_id), user_email: email, user_id: identity.id, name, phone, province, detail, is_default: shouldBeDefault ? 1 : 0 }) }, { status: 201 });
 }
 

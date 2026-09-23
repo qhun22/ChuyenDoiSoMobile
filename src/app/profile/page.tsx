@@ -312,7 +312,10 @@ export default function ProfilePage() {
       body: JSON.stringify({ user_email: user.email, user_id: user.id }),
     });
     if (!response.ok) { toast.error('Không thể đặt địa chỉ mặc định.'); return; }
-    setAddresses((currentAddresses) => currentAddresses.map((address) => ({ ...address, isDefault: address.id === addressId })));
+    setAddresses((currentAddresses) => {
+      const updated = currentAddresses.map((address) => ({ ...address, isDefault: address.id === addressId }));
+      return [...updated.filter((a) => a.isDefault), ...updated.filter((a) => !a.isDefault)];
+    });
   };
 
   const handlePasswordSubmit = async (event: React.FormEvent<HTMLFormElement>) => {

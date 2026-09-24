@@ -287,10 +287,11 @@ export default function ProductFilterGrid({
               slug: product.slug,
               brand: product.brand,
               image: product.image || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80',
-              price: product.price,
-              original_price: product.original_price || product.price,
-              discount_percent: product.discount_percent || 0,
-              inStock: product.stock !== undefined ? product.stock > 0 : true,
+              price: Number(product.price) || 0,
+              original_price: Number(product.original_price) || 0,
+              discount_percent: Number(product.discount_percent) || 0,
+              stock: product.stock !== undefined && product.stock !== null ? Number(product.stock) : 0,
+              inStock: (product.stock !== undefined && product.stock !== null) ? Number(product.stock) > 0 : Boolean(product.inStock),
               installment0: true,
             };
 

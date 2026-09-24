@@ -12,7 +12,7 @@ export default function AdminBrandsPage() {
   };
 
   return (
-    <div className="w-screen relative left-1/2 -translate-x-1/2 min-h-[calc(100vh-80px)] px-3 sm:px-5 py-3 flex gap-4 bg-white overflow-x-hidden font-['Signika',sans-serif]">
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] min-h-[calc(100vh-80px)] px-3 sm:px-5 py-3 flex gap-4 bg-white overflow-x-hidden font-['Signika',sans-serif]">
       <AdminSidebar
         activeSection="brands"
         onSelectSection={handleSelectSection}

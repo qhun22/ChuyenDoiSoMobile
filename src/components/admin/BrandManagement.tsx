@@ -25,9 +25,12 @@ const INITIAL_BRANDS: BrandItem[] = [
   { id: 10, name: 'XIAOMI', slug: 'xiaomi', logo: '/icons/logo_xiaomi_ngang_0faf267234.webp', product_count: 1, created_at: '2026-02-24 10:00:00' },
 ];
 
+// Cache state in memory / session to prevent re-loading on client tab changes
+let hasLoadedBrandsOnce = false;
+
 export default function BrandManagement() {
   const [brands, setBrands] = useState<BrandItem[]>(INITIAL_BRANDS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !hasLoadedBrandsOnce);
   const [searchTerm, setSearchTerm] = useState('');
 
 
@@ -43,30 +46,54 @@ export default function BrandManagement() {
   const [formSlug, setFormSlug] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch Brands from API (3s loading pattern)
-  const fetchBrands = async () => {
+  // Fetch Brands from API (with session caching)
+  const fetchBrands = async (forceRefresh = false) => {
     try {
-      setLoading(true);
+      if (!forceRefresh) {
+        try {
+          const cached = sessionStorage.getItem('admin_cached_brands_full');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setBrands(parsed);
+              hasLoadedBrandsOnce = true;
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {}
+      }
+
       const startTime = Date.now();
+      if (!hasLoadedBrandsOnce) setLoading(true);
+
       const res = await fetch('/api/brands');
       const data = await res.json();
       
       const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 3000 - elapsed);
+      const remaining = !hasLoadedBrandsOnce ? Math.max(0, 3000 - elapsed) : 0;
       setTimeout(() => {
         if (data.success && Array.isArray(data.data)) {
           setBrands(data.data);
+          try {
+            sessionStorage.setItem('admin_cached_brands_full', JSON.stringify(data.data));
+            sessionStorage.setItem(
+              'admin_cached_brands',
+              JSON.stringify(data.data.map((b: any) => b.name.toUpperCase()))
+            );
+          } catch {}
         }
+        hasLoadedBrandsOnce = true;
         setLoading(false);
       }, remaining);
     } catch {
       setTimeout(() => {
         toast.error('Không thể tải danh sách hãng');
+        hasLoadedBrandsOnce = true;
         setLoading(false);
-      }, 3000);
+      }, !hasLoadedBrandsOnce ? 3000 : 0);
     }
   };
-
 
   useEffect(() => {
     fetchBrands();
@@ -140,7 +167,7 @@ export default function BrandManagement() {
       if (data.success) {
         toast.success(`Đã thêm hãng "${formName.toUpperCase()}" thành công`);
         setIsAddModalOpen(false);
-        fetchBrands();
+        fetchBrands(true);
       } else {
         toast.error(data.error || 'Thêm hãng thất bại');
       }
@@ -168,7 +195,7 @@ export default function BrandManagement() {
         toast.success(`Đã cập nhật hãng "${formName.toUpperCase()}" thành công`);
         setIsEditModalOpen(false);
         setEditingBrand(null);
-        fetchBrands();
+        fetchBrands(true);
       } else {
         toast.error(data.error || 'Cập nhật thất bại');
       }
@@ -193,7 +220,7 @@ export default function BrandManagement() {
         toast.success(`Đã xóa hãng "${deletingBrand.name}" thành công`);
         setIsDeleteModalOpen(false);
         setDeletingBrand(null);
-        fetchBrands();
+        fetchBrands(true);
       } else {
         toast.error(data.error || 'Xóa hãng thất bại');
       }
@@ -415,8 +442,13 @@ export default function BrandManagement() {
           MODAL THÊM HÃNG
           ========================================================================= */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div
+          className="admin-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsAddModalOpen(false);
+          }}
+        >
+          <div className="admin-modal-box max-w-md">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50">
               <h3 className="font-extrabold text-sm text-slate-900 uppercase tracking-wide">
                 Thêm hãng mới
@@ -484,8 +516,13 @@ export default function BrandManagement() {
           MODAL SỬA HÃNG
           ========================================================================= */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div
+          className="admin-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsEditModalOpen(false);
+          }}
+        >
+          <div className="admin-modal-box max-w-md">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50">
               <h3 className="font-extrabold text-sm text-slate-900 uppercase tracking-wide">
                 Đổi tên hãng
@@ -551,8 +588,13 @@ export default function BrandManagement() {
           MODAL XÁC NHẬN XÓA
           ========================================================================= */}
       {isDeleteModalOpen && deletingBrand && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-5 text-center space-y-4">
+        <div
+          className="admin-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDeleteModalOpen(false);
+          }}
+        >
+          <div className="admin-modal-box max-w-sm p-5 text-center space-y-4">
             <div className="w-11 h-11 rounded-full bg-red-50 text-[#b80012] mx-auto flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

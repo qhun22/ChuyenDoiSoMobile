@@ -46,3 +46,7 @@ next-env.d.ts
 
 # local development runner
 run_dev.bat
+
+# local user uploads (avoid committing user uploaded images)
+/public/uploads/*
+!/public/uploads/.gitkeep

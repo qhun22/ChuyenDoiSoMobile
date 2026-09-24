@@ -757,6 +757,31 @@ legend {
   }
 }
 
+.admin-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(4px) !important;
+  animation: modalBackdropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+.admin-modal-box {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 520px !important;
+  background-color: #ffffff !important;
+  border-radius: 16px !important;
+  border: 1px solid #f1f5f9 !important;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+  overflow: hidden !important;
+  animation: modalContentIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
 /* Checkbox pop effect khi tích */
 @keyframes checkmarkPop {
   0% {

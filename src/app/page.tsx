@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import HeroVideoSlider from '@/components/home/HeroVideoSlider';
 import OfferAndBlog from '@/components/home/OfferAndBlog';
 import BrandScroll from '@/components/home/BrandScroll';
@@ -8,8 +11,8 @@ import UuDaiDa from '@/components/home/UuDaiDa';
 import WhyChooseUs from '@/components/home/WhyChooseUs';
 import { FEATURED_PRODUCTS } from '@/components/product/mock-products';
 
-// Danh sách hãng tương thích cho bộ lọc
-const BRANDS_DATA = [
+// Danh sách hãng tương thích mặc định
+const DEFAULT_BRANDS = [
   { name: 'Apple', slug: 'iphone' },
   { name: 'Samsung', slug: 'samsung' },
   { name: 'Xiaomi', slug: 'xiaomi' },
@@ -22,95 +25,37 @@ const BRANDS_DATA = [
   { name: 'Benco', slug: 'benco' },
 ];
 
-// Dữ liệu sản phẩm mẫu có bổ sung thông số phục vụ bộ lọc nâng cao
-const MOCK_PRODUCTS = [
-  {
-    id: 1,
-    name: 'iPhone 15 128GB Chính Hãng',
-    slug: 'iphone-15',
-    brand: 'iphone',
-    image: '/icons/logo_iphone_ngang_eac93ff477.webp',
-    price: 17990000,
-    original_price: 19990000,
-    discount_percent: 10,
-    stock: 10,
-    os: 'ios',
-    rom: 'lte128',
-    ram: '6',
-  },
-  {
-    id: 2,
-    name: 'iPhone 14 Pro Max 128GB',
-    slug: 'iphone-14-pro-max',
-    brand: 'iphone',
-    image: '/icons/logo_iphone_ngang_eac93ff477.webp',
-    price: 26990000,
-    original_price: 29990000,
-    discount_percent: 10,
-    stock: 5,
-    os: 'ios',
-    rom: 'lte128',
-    ram: '6',
-  },
-  {
-    id: 3,
-    name: 'iPhone 17 Pro Max 1TB Cam Vũ Trụ',
-    slug: 'iphone-17-pro-max',
-    brand: 'iphone',
-    image: '/icons/logo_iphone_ngang_eac93ff477.webp',
-    price: 34190000,
-    original_price: 37990000,
-    discount_percent: 10,
-    stock: 12,
-    os: 'ios',
-    rom: '1tb',
-    ram: '12',
-  },
-  {
-    id: 4,
-    name: 'Samsung Galaxy S25 Ultra 512GB',
-    slug: 'galaxy-s25-ultra',
-    brand: 'samsung',
-    image: '/icons/logo_samsung_ngang_1624d75bd8.webp',
-    price: 29040000,
-    original_price: 33300000,
-    discount_percent: 12,
-    stock: 8,
-    os: 'android',
-    rom: '512',
-    ram: '12',
-  },
-  {
-    id: 5,
-    name: 'iPhone 17 tiêu chuẩn 256GB',
-    slug: 'iphone-17',
-    brand: 'iphone',
-    image: '/icons/logo_iphone_ngang_eac93ff477.webp',
-    price: 22490000,
-    original_price: 24990000,
-    discount_percent: 10,
-    stock: 15,
-    os: 'ios',
-    rom: '256',
-    ram: '8',
-  },
-  {
-    id: 6,
-    name: 'Xiaomi 15 Ultra Camera Leica',
-    slug: 'xiaomi-15-ultra',
-    brand: 'xiaomi',
-    image: '/icons/logo_xiaomi_ngang_0faf267234.webp',
-    price: 24990000,
-    original_price: 26990000,
-    discount_percent: 7,
-    stock: 6,
-    os: 'android',
-    rom: '512',
-    ram: '16',
-  },
-];
-
 export default function HomePage() {
+  const [products, setProducts] = useState<any[]>(FEATURED_PRODUCTS);
+  const [brands, setBrands] = useState(DEFAULT_BRANDS);
+
+  useEffect(() => {
+    // 1. Fetch live products from database API
+    fetch('/api/products')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setProducts(data.data);
+        }
+      })
+      .catch(() => {});
+
+    // 2. Fetch live brands from database API
+    fetch('/api/brands')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setBrands(
+            data.data.map((b: any) => ({
+              name: b.name,
+              slug: b.slug || b.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="space-y-4">
       {/* 1. Header Slider Banner */}
@@ -124,15 +69,15 @@ export default function HomePage() {
 
       {/* 4. Khối HotSale Hộp Tết */}
       <HotSaleBox
-        suggestedProducts={FEATURED_PRODUCTS}
-        bestSellerProducts={FEATURED_PRODUCTS}
-        hotSaleProducts={FEATURED_PRODUCTS}
+        suggestedProducts={products}
+        bestSellerProducts={products}
+        hotSaleProducts={products}
       />
 
       {/* 5. Bộ lọc & Sản phẩm nổi bật */}
       <ProductFilterGrid
-        brands={BRANDS_DATA}
-        products={FEATURED_PRODUCTS}
+        brands={brands}
+        products={products}
       />
 
       {/* 6. Review Sản Phẩm (Video Shorts dọc) */}

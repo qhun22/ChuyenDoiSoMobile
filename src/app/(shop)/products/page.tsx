@@ -4,15 +4,29 @@ import { useState, useEffect } from 'react';
 import ProductCard from "@/components/product/ProductCard";
 import { FEATURED_PRODUCTS, ProductItemData } from "@/components/product/mock-products";
 
-const products: ProductItemData[] = FEATURED_PRODUCTS;
-
 export default function ProductsPage() {
+  const [products, setProducts] = useState<ProductItemData[]>(FEATURED_PRODUCTS);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setProducts(data.data);
+        }
+      } catch {
+        // Fallback to static mock if offline
+      } finally {
+        setLoading(false);
+      }
+    };
+
     const timer = setTimeout(() => {
-      setLoading(false);
+      fetchCatalog();
     }, 3000);
+
     return () => clearTimeout(timer);
   }, []);
 

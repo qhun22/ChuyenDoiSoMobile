@@ -53,7 +53,7 @@ function DashboardContent() {
   };
 
   return (
-    <div className="w-screen relative left-1/2 -translate-x-1/2 min-h-[calc(100vh-80px)] px-3 sm:px-5 py-3 flex gap-4 bg-white overflow-x-hidden font-['Signika',sans-serif]">
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] min-h-[calc(100vh-80px)] px-3 sm:px-5 py-3 flex gap-4 bg-white overflow-x-hidden font-['Signika',sans-serif]">
       {/* CỘT TRÁI (AdminSidebar): Cố định độ rộng w-52 */}
       <AdminSidebar
         activeSection={activeSection}
@@ -68,15 +68,21 @@ function DashboardContent() {
 
         {/* QUẢN LÝ SẢN PHẨM & CHI TIẾT SẢN PHẨM */}
         {activeSection === 'products' && (
-          selectedProduct ? (
-            <ProductDetailManagement
-              product={selectedProduct}
-              onBack={handleBackToProductList}
-              onUpdateProduct={(updated) => setSelectedProduct(updated)}
-            />
-          ) : (
-            <ProductManagement onOpenDetail={handleOpenProductDetail} />
-          )
+          <>
+            <div className={selectedProduct ? 'hidden' : 'block'}>
+              <ProductManagement
+                onOpenDetail={handleOpenProductDetail}
+                updatedProduct={selectedProduct}
+              />
+            </div>
+            {selectedProduct && (
+              <ProductDetailManagement
+                product={selectedProduct}
+                onBack={handleBackToProductList}
+                onUpdateProduct={(updated) => setSelectedProduct(updated)}
+              />
+            )}
+          </>
         )}
 
         {/* CÁC MỤC KHÁC ĐANG PHÁT TRIỂN */}

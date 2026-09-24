@@ -44,50 +44,26 @@ export default function ProductDetailManagement({
 
   // Tab 4: Màu - Ảnh sản phẩm
   const [selectedFolderForColor, setSelectedFolderForColor] = useState(folders[0] || 'Mặt trước & Màn hình');
-  const [selectedSkuForColor, setSelectedSkuForColor] = useState(skus[0] || `SKU-${product.id}-128G`);
-  const [colorNameInput, setColorNameInput] = useState('Titan Tự Nhiên');
+  const [selectedSkuForColor, setSelectedSkuForColor] = useState(skus[0] || `SKU-${product.id}`);
+  const [colorNameInput, setColorNameInput] = useState('');
   const [colorImageInput, setColorImageInput] = useState(product.image || '');
   const [colorImagesList, setColorImagesList] = useState(
     product.colorImages && product.colorImages.length > 0
       ? product.colorImages
-      : [
-          {
-            id: '1',
-            folder: folders[0] || 'Mặt trước & Màn hình',
-            sku: skus[0] || `SKU-${product.id}-128G`,
-            colorName: 'Titan Tự Nhiên',
-            imageUrl: product.image || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80',
-          },
-        ]
+      : []
   );
   const colorFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingColorImage, setUploadingColorImage] = useState(false);
 
   // Tab 5: Dung lượng
-  const [variantOrigPrice, setVariantOrigPrice] = useState<number>(product.original_price || 18990000);
-  const [variantPrice, setVariantPrice] = useState<number>(product.price || 16990000);
+  const [variantOrigPrice, setVariantOrigPrice] = useState<number>(product.original_price || 0);
+  const [variantPrice, setVariantPrice] = useState<number>(product.price || 0);
   const [variantStorage, setVariantStorage] = useState('128GB');
-  const [variantColor, setVariantColor] = useState(colorNameInput || 'Titan Tự Nhiên');
+  const [variantColor, setVariantColor] = useState(colorNameInput || 'Tiêu chuẩn');
   const [variantsList, setVariantsList] = useState(
     product.variants && product.variants.length > 0
       ? product.variants
-      : [
-          {
-            id: '1',
-            color: 'Titan Tự Nhiên',
-            storage: '128GB',
-            original_price: product.original_price || 18990000,
-            price: product.price || 16990000,
-            discount_percent: Math.round((((product.original_price || 18990000) - (product.price || 16990000)) / (product.original_price || 18990000)) * 100),
-          },
-          {
-            id: '2',
-            color: 'Đen Titan',
-            storage: '256GB',
-            original_price: (product.original_price || 18990000) + 2000000,
-            price: (product.price || 16990000) + 1800000,
-            discount_percent: 10,
-          },
-        ]
+      : []
   );
 
   // Tính % giảm giá tự động cho biến thể
@@ -103,6 +79,27 @@ export default function ProductDetailManagement({
 
   const formatVND = (num: number) => {
     return new Intl.NumberFormat('vi-VN').format(num) + 'đ';
+  };
+
+  // Helper to persist detail changes to Cloudflare D1 / database
+  const persistProductToDb = async (updated: AdminProductItem, successMessage: string) => {
+    setProduct(updated);
+    if (onUpdateProduct) onUpdateProduct(updated);
+    try {
+      const res = await fetch('/api/products', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(successMessage);
+      } else {
+        toast.error(data.error || 'Lưu thất bại');
+      }
+    } catch {
+      toast.error('Lỗi kết nối máy chủ');
+    }
   };
 
   // 1. Xử lý Tab 1 (Chi tiết sản phẩm)
@@ -137,23 +134,19 @@ export default function ProductDetailManagement({
       toast.error('Thông số kỹ thuật chưa đúng cú pháp JSON!');
       return;
     }
-    const updated = {
+    const updated: AdminProductItem = {
       ...product,
       name: productName,
       stock: Number(productStock),
       specifications: specJson,
       youtubeId,
     };
-    setProduct(updated);
-    if (onUpdateProduct) onUpdateProduct(updated);
-    toast.success('Đã lưu thông tin chi tiết sản phẩm!');
+    persistProductToDb(updated, 'Đã lưu thông tin chi tiết sản phẩm vào database!');
   };
 
   const handleSaveYoutube = () => {
-    const updated = { ...product, youtubeId };
-    setProduct(updated);
-    if (onUpdateProduct) onUpdateProduct(updated);
-    toast.success('Đã lưu ID video YouTube');
+    const updated: AdminProductItem = { ...product, youtubeId };
+    persistProductToDb(updated, 'Đã lưu ID video YouTube vào database!');
   };
 
   // 2. Xử lý Tab 2 (SKU)
@@ -170,12 +163,15 @@ export default function ProductDetailManagement({
     const nextSkus = [...skus, newSkuInput.trim()];
     setSkus(nextSkus);
     setNewSkuInput('');
-    toast.success(`Đã thêm SKU "${newSkuInput.trim()}"`);
+    const updated: AdminProductItem = { ...product, skus: nextSkus };
+    persistProductToDb(updated, `Đã thêm SKU "${newSkuInput.trim()}" vào database`);
   };
 
   const handleDeleteSku = (skuToDelete: string) => {
-    setSkus(skus.filter((s) => s !== skuToDelete));
-    toast.info(`Đã xóa SKU "${skuToDelete}"`);
+    const nextSkus = skus.filter((s) => s !== skuToDelete);
+    setSkus(nextSkus);
+    const updated: AdminProductItem = { ...product, skus: nextSkus };
+    persistProductToDb(updated, `Đã xóa SKU "${skuToDelete}"`);
   };
 
   // 3. Xử lý Tab 3 (Thư mục)
@@ -192,12 +188,15 @@ export default function ProductDetailManagement({
     const nextFolders = [...folders, newFolderInput.trim()];
     setFolders(nextFolders);
     setNewFolderInput('');
-    toast.success(`Đã thêm thư mục "${newFolderInput.trim()}"`);
+    const updated: AdminProductItem = { ...product, folders: nextFolders };
+    persistProductToDb(updated, `Đã thêm thư mục "${newFolderInput.trim()}" vào database`);
   };
 
   const handleDeleteFolder = (folderToDelete: string) => {
-    setFolders(folders.filter((f) => f !== folderToDelete));
-    toast.info(`Đã xóa thư mục "${folderToDelete}"`);
+    const nextFolders = folders.filter((f) => f !== folderToDelete);
+    setFolders(nextFolders);
+    const updated: AdminProductItem = { ...product, folders: nextFolders };
+    persistProductToDb(updated, `Đã xóa thư mục "${folderToDelete}"`);
   };
 
   // 4. Xử lý Tab 4 (Màu - Ảnh sản phẩm)
@@ -214,48 +213,90 @@ export default function ProductDetailManagement({
       colorName: colorNameInput.trim(),
       imageUrl: colorImageInput || product.image || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80',
     };
-    setColorImagesList([newEntry, ...colorImagesList]);
-    toast.success(`Đã lưu màu "${colorNameInput}" thành công`);
+    const nextList = [newEntry, ...colorImagesList];
+    setColorImagesList(nextList);
+    const updated: AdminProductItem = { ...product, colorImages: nextList };
+    persistProductToDb(updated, `Đã lưu màu "${colorNameInput}" vào database`);
   };
 
   const handleDeleteColorImage = (id: string) => {
-    setColorImagesList(colorImagesList.filter((item) => item.id !== id));
-    toast.info('Đã xóa màu ảnh');
+    const nextList = colorImagesList.filter((item) => item.id !== id);
+    setColorImagesList(nextList);
+    const updated: AdminProductItem = { ...product, colorImages: nextList };
+    persistProductToDb(updated, 'Đã xóa màu ảnh');
   };
 
   // 5. Xử lý Tab 5 (Dung lượng)
   const handleAddVariant = (e: React.FormEvent) => {
     e.preventDefault();
+    const origP = Number(variantOrigPrice) || 0;
+    const p = Number(variantPrice) || 0;
+    const disc = origP > p && origP > 0 ? Math.round(((origP - p) / origP) * 100) : 0;
     const newVariant = {
       id: String(Date.now()),
       color: variantColor,
       storage: variantStorage,
-      original_price: Number(variantOrigPrice),
-      price: Number(variantPrice),
-      discount_percent: variantDiscountPercent,
+      original_price: origP,
+      price: p,
+      discount_percent: disc,
     };
-    setVariantsList([...variantsList, newVariant]);
-    toast.success(`Đã thêm biến thể ${variantStorage} - ${variantColor}`);
+    const nextList = [...variantsList, newVariant];
+    setVariantsList(nextList);
+
+    const activeVariants = nextList.filter((v) => v.price > 0);
+    const primary = activeVariants.length > 0 
+      ? activeVariants.reduce((min, curr) => (curr.price < min.price ? curr : min), activeVariants[0])
+      : nextList[0];
+
+    const updated: AdminProductItem = {
+      ...product,
+      variants: nextList,
+      price: primary ? primary.price : product.price,
+      original_price: primary ? primary.original_price : product.original_price,
+      discount_percent: primary ? primary.discount_percent : product.discount_percent,
+    };
+    persistProductToDb(updated, `Đã thêm biến thể ${variantStorage} - ${variantColor}`);
   };
 
   const handleDeleteVariant = (id: string) => {
-    setVariantsList(variantsList.filter((v) => v.id !== id));
-    toast.info('Đã xóa biến thể dung lượng');
+    const nextList = variantsList.filter((v) => v.id !== id);
+    setVariantsList(nextList);
+
+    const activeVariants = nextList.filter((v) => v.price > 0);
+    const primary = activeVariants.length > 0 
+      ? activeVariants.reduce((min, curr) => (curr.price < min.price ? curr : min), activeVariants[0])
+      : nextList[0];
+
+    const updated: AdminProductItem = {
+      ...product,
+      variants: nextList,
+      price: primary ? primary.price : 0,
+      original_price: primary ? primary.original_price : 0,
+      discount_percent: primary ? primary.discount_percent : 0,
+    };
+    persistProductToDb(updated, 'Đã xóa biến thể dung lượng');
   };
 
   const handleSaveAllVariants = () => {
-    const updated = { ...product, variants: variantsList };
-    setProduct(updated);
-    if (onUpdateProduct) onUpdateProduct(updated);
-    toast.success('Đã lưu tất cả biến thể dung lượng!');
+    const activeVariants = variantsList.filter((v) => v.price > 0);
+    const primary = activeVariants.length > 0 
+      ? activeVariants.reduce((min, curr) => (curr.price < min.price ? curr : min), activeVariants[0])
+      : variantsList[0];
+
+    const updated: AdminProductItem = {
+      ...product,
+      variants: variantsList,
+      price: primary ? primary.price : product.price,
+      original_price: primary ? primary.original_price : product.original_price,
+      discount_percent: primary ? primary.discount_percent : product.discount_percent,
+    };
+    persistProductToDb(updated, 'Đã lưu tất cả biến thể dung lượng vào database!');
   };
 
   // 6. Xử lý Tab 6 (Thông tin sản phẩm)
   const handleSaveDescription = () => {
-    const updated = { ...product, description: descriptionHtml };
-    setProduct(updated);
-    if (onUpdateProduct) onUpdateProduct(updated);
-    toast.success('Đã lưu bài viết mô tả sản phẩm!');
+    const updated: AdminProductItem = { ...product, description: descriptionHtml };
+    persistProductToDb(updated, 'Đã lưu bài viết mô tả sản phẩm vào database!');
   };
 
   const NAV_TABS = [
@@ -344,9 +385,6 @@ export default function ProductDetailManagement({
                 <h2 className="text-sm font-bold uppercase text-slate-900">
                   1. Chi tiết thông số sản phẩm
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Cập nhật tên sản phẩm, kho hàng, thông số kỹ thuật JSON và video review
-                </p>
               </div>
 
               <form onSubmit={handleSaveGeneral} className="space-y-4 pt-1">
@@ -422,7 +460,7 @@ export default function ProductDetailManagement({
                 {/* Khu vực ID YouTube */}
                 <div className="pt-1">
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    ID Video YouTube Review (Nhúng vào trang chi tiết)
+                    ID Video YouTube
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -684,11 +722,28 @@ export default function ProductDetailManagement({
                       <input
                         type="file"
                         ref={colorFileInputRef}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            setColorImageInput(URL.createObjectURL(file));
-                            toast.success('Đã tải ảnh màu sắc');
+                          if (!file) return;
+                          try {
+                            setUploadingColorImage(true);
+                            const formData = new FormData();
+                            formData.append('file', file);
+                            const res = await fetch('/api/upload', {
+                              method: 'POST',
+                              body: formData,
+                            });
+                            const data = await res.json();
+                            if (data.success && data.url) {
+                              setColorImageInput(data.url);
+                              toast.success('Đã tải ảnh màu sắc lên thư mục local!');
+                            } else {
+                              toast.error(data.error || 'Tải ảnh thất bại');
+                            }
+                          } catch {
+                            toast.error('Lỗi khi tải ảnh lên máy chủ');
+                          } finally {
+                            setUploadingColorImage(false);
                           }
                         }}
                         accept="image/*"
@@ -697,10 +752,11 @@ export default function ProductDetailManagement({
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
+                          disabled={uploadingColorImage}
                           onClick={() => colorFileInputRef.current?.click()}
-                          className="h-7 px-2.5 rounded border border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-semibold transition cursor-pointer"
+                          className="h-7 px-2.5 rounded border border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-semibold transition cursor-pointer disabled:opacity-50"
                         >
-                          Chọn tệp ảnh
+                          {uploadingColorImage ? 'Đang tải ảnh...' : 'Chọn tệp ảnh'}
                         </button>
                         <span className="text-[11px] text-slate-400">hoặc dán đường dẫn ảnh:</span>
                       </div>

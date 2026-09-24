@@ -50,82 +50,85 @@ const DEFAULT_BRANDS = [
   'Benco',
 ];
 
+// Cache state in memory / session to prevent re-loading on client tab changes
+let hasLoadedProductsOnce = false;
+
 interface ProductManagementProps {
   onOpenDetail?: (product: AdminProductItem) => void;
+  updatedProduct?: AdminProductItem | null;
 }
 
-export default function ProductManagement({ onOpenDetail }: ProductManagementProps) {
-  // Chuyển đổi mock data sang state danh sách quản trị
-  const [products, setProducts] = useState<AdminProductItem[]>(() => {
-    return FEATURED_PRODUCTS.map((p, idx) => ({
-      id: p.id || idx + 1,
-      name: p.name,
-      slug: p.slug,
-      brand: p.brand ? p.brand.toUpperCase() : 'APPLE',
-      image: p.image || '/icons/logo_iphone_ngang_eac93ff477.webp',
-      stock: p.stock ?? (p.inStock ? 10 : 0),
-      original_price: p.original_price,
-      price: p.price,
-      discount_percent: p.discount_percent || Math.round(((p.original_price - p.price) / p.original_price) * 100) || 0,
-      inStock: p.inStock,
-      specifications: JSON.stringify(
-        {
-          screen: p.screen_size ? `${p.screen_size} inch` : '6.1 inch OLED',
-          chip: p.os === 'ios' ? 'Apple A16 / A17 Bionic' : 'Snapdragon 8 Gen 3',
-          ram: p.ram ? `${p.ram} GB` : '8 GB',
-          storage: p.rom ? `${p.rom.replace('lte', '')} GB` : '128 GB',
-          battery: p.battery ? `${p.battery} mAh` : '4000 mAh',
-        },
-        null,
-        2
-      ),
-      youtubeId: 'dQw4w9WgXcQ',
-      skus: [`SKU-${p.id}-128G`, `SKU-${p.id}-256G`],
-      folders: ['Mặt trước & Màn hình', 'Mặt lưng & Camera', 'Góc cạnh viền máy'],
-      variants: [
-        {
-          id: '1',
-          color: 'Titan Tự Nhiên',
-          storage: '128GB',
-          original_price: p.original_price,
-          price: p.price,
-          discount_percent: p.discount_percent,
-        },
-        {
-          id: '2',
-          color: 'Đen Không Gian',
-          storage: '256GB',
-          original_price: p.original_price + 2000000,
-          price: p.price + 1800000,
-          discount_percent: p.discount_percent,
-        },
-      ],
-      colorImages: [
-        {
-          id: '1',
-          folder: 'Mặt trước & Màn hình',
-          sku: `SKU-${p.id}-128G`,
-          colorName: 'Titan Tự Nhiên',
-          imageUrl: p.image,
-        },
-      ],
-      description: `<p><strong>${p.name}</strong> mang đến trải nghiệm đột phá với hiệu năng vượt trội, màn hình sắc nét và thời lượng pin ấn tượng cả ngày dài.</p>`,
-    }));
-  });
-
+export default function ProductManagement({ onOpenDetail, updatedProduct }: ProductManagementProps) {
+  const [products, setProducts] = useState<AdminProductItem[]>([]);
   const [brands, setBrands] = useState<string[]>(DEFAULT_BRANDS);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !hasLoadedProductsOnce);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrandFilter, setSelectedBrandFilter] = useState('');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock' | 'discount'>('all');
+  const [submitting, setSubmitting] = useState(false);
 
-  // 3s loading timer
+  // Fetch products from database (with session caching)
+  const fetchProducts = async (forceRefresh = false) => {
+    try {
+      if (!forceRefresh) {
+        try {
+          const cached = sessionStorage.getItem('admin_cached_products');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setProducts(parsed);
+              hasLoadedProductsOnce = true;
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {}
+      }
+
+      const startTime = Date.now();
+      if (!hasLoadedProductsOnce) setLoading(true);
+
+      const res = await fetch('/api/products');
+      const data = await res.json();
+
+      const elapsed = Date.now() - startTime;
+      const remaining = !hasLoadedProductsOnce ? Math.max(0, 3000 - elapsed) : 0;
+
+      setTimeout(() => {
+        if (data.success && Array.isArray(data.data)) {
+          setProducts(data.data);
+          try {
+            sessionStorage.setItem('admin_cached_products', JSON.stringify(data.data));
+          } catch {}
+        }
+        hasLoadedProductsOnce = true;
+        setLoading(false);
+      }, remaining);
+    } catch {
+      setTimeout(() => {
+        toast.error('Không thể tải danh sách sản phẩm');
+        hasLoadedProductsOnce = true;
+        setLoading(false);
+      }, !hasLoadedProductsOnce ? 3000 : 0);
+    }
+  };
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 3000);
-    return () => clearTimeout(timer);
+    fetchProducts();
   }, []);
+
+  // Sync updated product from detail screen
+  useEffect(() => {
+    if (updatedProduct) {
+      setProducts((prev) => {
+        const next = prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p));
+        try {
+          sessionStorage.setItem('admin_cached_products', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+    }
+  }, [updatedProduct]);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,18 +138,33 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
   // Form State (Chỉ giữ 3 trường: Hãng, Tên, Ảnh đại diện)
   const [currentProduct, setCurrentProduct] = useState<AdminProductItem | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<AdminProductItem | null>(null);
-  const [formBrand, setFormBrand] = useState(DEFAULT_BRANDS[0]);
+  const [formBrand, setFormBrand] = useState('');
   const [formName, setFormName] = useState('');
   const [formImage, setFormImage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load brands from API if available
+  // Load brands from API (with session caching)
   useEffect(() => {
+    try {
+      const cached = sessionStorage.getItem('admin_cached_brands');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBrands(parsed);
+          return;
+        }
+      }
+    } catch {}
+
     fetch('/api/brands')
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && data.success && Array.isArray(data.data) && data.data.length > 0) {
-          setBrands(data.data.map((b: { name: string }) => b.name.toUpperCase()));
+          const brandNames = data.data.map((b: { name: string }) => b.name.toUpperCase());
+          setBrands(brandNames);
+          try {
+            sessionStorage.setItem('admin_cached_brands', JSON.stringify(brandNames));
+          } catch {}
         }
       })
       .catch(() => {});
@@ -201,7 +219,7 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
   const handleOpenAddModal = () => {
     setIsEditMode(false);
     setCurrentProduct(null);
-    setFormBrand(brands[0] || 'APPLE');
+    setFormBrand('');
     setFormName('');
     setFormImage('https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80');
     setIsModalOpen(true);
@@ -217,19 +235,43 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
     setIsModalOpen(true);
   };
 
-  // Xử lý upload ảnh mô phỏng
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Xử lý upload ảnh lưu vào thư mục local qua /api/upload
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const fakeUrl = URL.createObjectURL(file);
-      setFormImage(fakeUrl);
-      toast.success('Đã tải ảnh lên thành công');
+    if (!file) return;
+
+    try {
+      setUploadingImage(true);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.success && data.url) {
+        setFormImage(data.url);
+        toast.success('Đã tải ảnh lên thư mục local thành công!');
+      } else {
+        toast.error(data.error || 'Tải ảnh thất bại');
+      }
+    } catch {
+      toast.error('Lỗi khi tải ảnh lên máy chủ');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   // Lưu Form Thêm / Sửa nhanh
-  const handleSaveProduct = (e: React.FormEvent) => {
+  const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formBrand) {
+      toast.error('Vui lòng chọn hãng sản phẩm');
+      return;
+    }
     if (!formName.trim()) {
       toast.error('Vui lòng nhập tên sản phẩm');
       return;
@@ -241,59 +283,60 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    if (isEditMode && currentProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === currentProduct.id
-            ? {
-                ...p,
-                name: formName,
-                slug,
-                brand: formBrand,
-                image: formImage || p.image,
-              }
-            : p
-        )
-      );
-      toast.success(`Đã cập nhật sản phẩm "${formName}"`);
-    } else {
-      const defaultOriginalPrice = 17990000;
-      const defaultPrice = 15990000;
-      const discount = Math.round(((defaultOriginalPrice - defaultPrice) / defaultOriginalPrice) * 100);
-
-      const newProduct: AdminProductItem = {
-        id: Date.now(),
-        name: formName,
-        slug,
-        brand: formBrand,
-        price: defaultPrice,
-        original_price: defaultOriginalPrice,
-        stock: 10,
-        inStock: true,
-        discount_percent: discount,
-        image: formImage || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80',
-        specifications: JSON.stringify({ screen: '6.1 inch', chip: 'Mới nhất', ram: '8 GB', storage: '128 GB' }, null, 2),
-        youtubeId: '',
-        skus: [`SKU-${Date.now()}`],
-        folders: ['Ảnh chính', 'Mặt lưng'],
-        variants: [
-          {
-            id: '1',
-            color: 'Mặc định',
-            storage: '128GB',
-            original_price: defaultOriginalPrice,
-            price: defaultPrice,
-            discount_percent: discount,
-          },
-        ],
-        colorImages: [],
-        description: `<p>Mô tả chi tiết sản phẩm <strong>${formName}</strong>.</p>`,
-      };
-      setProducts((prev) => [newProduct, ...prev]);
-      toast.success(`Đã thêm sản phẩm "${formName}"`);
+    try {
+      setSubmitting(true);
+      if (isEditMode && currentProduct) {
+        const res = await fetch('/api/products', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: currentProduct.id,
+            name: formName,
+            slug,
+            brand: formBrand,
+            image: formImage || currentProduct.image,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Đã cập nhật sản phẩm "${formName}" vào database`);
+          setIsModalOpen(false);
+          fetchProducts(true);
+        } else {
+          toast.error(data.error || 'Cập nhật thất bại');
+        }
+      } else {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formName,
+            slug,
+            brand: formBrand,
+            image: formImage || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80',
+            stock: 0,
+            original_price: 0,
+            price: 0,
+            discount_percent: 0,
+            variants: [],
+            skus: [],
+            colorImages: [],
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(`Đã lưu sản phẩm "${formName}" vào database`);
+          setIsModalOpen(false);
+          fetchProducts(true);
+        } else {
+          toast.error(data.error || 'Thêm sản phẩm thất bại');
+        }
+      }
+    } catch {
+      toast.error('Lỗi kết nối máy chủ');
+    } finally {
+      setSubmitting(false);
     }
-
-    setIsModalOpen(false);
   };
 
   // Mở modal xác nhận xóa
@@ -303,12 +346,27 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
   };
 
   // Xác nhận xóa
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deletingProduct) return;
-    setProducts((prev) => prev.filter((p) => p.id !== deletingProduct.id));
-    toast.success(`Đã xóa sản phẩm "${deletingProduct.name}"`);
-    setIsDeleteModalOpen(false);
-    setDeletingProduct(null);
+    try {
+      setSubmitting(true);
+      const res = await fetch(`/api/products?id=${deletingProduct.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(`Đã xóa sản phẩm "${deletingProduct.name}" khỏi database`);
+        setIsDeleteModalOpen(false);
+        setDeletingProduct(null);
+        fetchProducts();
+      } else {
+        toast.error(data.error || 'Xóa sản phẩm thất bại');
+      }
+    } catch {
+      toast.error('Lỗi kết nối máy chủ');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -559,8 +617,8 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                     {/* Cột Tồn kho */}
                     <td className="align-middle py-2 px-2.5 w-20 text-center whitespace-nowrap">
                       {(p.stock ?? 0) === 0 ? (
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">
-                          Hết
+                        <span className="font-semibold text-slate-400 text-xs">
+                          0
                         </span>
                       ) : (
                         <span className="font-semibold text-slate-700 text-xs">
@@ -571,7 +629,7 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
 
                     {/* Cột Giá gốc */}
                     <td className="align-middle py-2 px-2.5 w-24 text-right whitespace-nowrap text-slate-400 line-through text-xs">
-                      {formatVND(p.original_price)}
+                      {formatVND(p.original_price ?? 0)}
                     </td>
 
                     {/* Cột Giảm (%) */}
@@ -579,13 +637,13 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                       {p.discount_percent > 0 ? (
                         <span>-{p.discount_percent}%</span>
                       ) : (
-                        <span className="text-slate-300 font-normal">-</span>
+                        <span className="text-slate-300 font-normal">0%</span>
                       )}
                     </td>
 
                     {/* Cột Giá treo (Giá bán) */}
                     <td className="align-middle py-2 px-2.5 w-28 text-right whitespace-nowrap text-[#b80012] font-bold text-xs sm:text-sm">
-                      {formatVND(p.price)}
+                      {formatVND(p.price ?? 0)}
                     </td>
 
                     {/* Cột Hành động: [Chi tiết] [Sửa] [Xóa] */}
@@ -631,8 +689,13 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
           MODAL THÊM / SỬA NHANH SẢN PHẨM
           ========================================================================= */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-lg bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div
+          className="admin-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsModalOpen(false);
+          }}
+        >
+          <div className="admin-modal-box max-w-lg">
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/50">
               <h3 className="font-extrabold text-sm text-slate-900 uppercase tracking-wide">
                 {isEditMode ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
@@ -659,6 +722,9 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                     required
                     className="w-full h-8 px-2.5 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-[#b80012] cursor-pointer"
                   >
+                    <option value="" disabled>
+                      -- Vui lòng chọn hãng --
+                    </option>
                     {brands.map((b) => (
                       <option key={b} value={b}>
                         {b}
@@ -707,10 +773,11 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
+                        disabled={uploadingImage}
                         onClick={() => fileInputRef.current?.click()}
-                        className="h-7 px-2.5 rounded border border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-semibold transition cursor-pointer"
+                        className="h-7 px-2.5 rounded border border-slate-200 text-slate-700 hover:bg-slate-50 text-[11px] font-semibold transition cursor-pointer disabled:opacity-50"
                       >
-                        Chọn ảnh từ máy
+                        {uploadingImage ? 'Đang tải ảnh...' : 'Chọn ảnh từ máy'}
                       </button>
                       <span className="text-[11px] text-slate-400">hoặc dán URL:</span>
                     </div>
@@ -749,8 +816,13 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
           MODAL XÁC NHẬN XÓA
           ========================================================================= */}
       {isDeleteModalOpen && deletingProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200 p-5 text-center space-y-3.5">
+        <div
+          className="admin-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDeleteModalOpen(false);
+          }}
+        >
+          <div className="admin-modal-box max-w-sm p-5 text-center space-y-3.5">
             <div className="w-11 h-11 rounded-full bg-red-50 text-[#b80012] mx-auto flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

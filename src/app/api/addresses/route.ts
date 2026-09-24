@@ -141,6 +141,7 @@ export async function GET(request: Request) {
   }
 
   const where = identityWhere(identity);
+  try {
     const columns = await database.prepare('PRAGMA table_info(addresses)').all<{ name: string }>();
     const names = new Set((columns.results ?? []).map((col) => col.name));
     const nameCol = names.has('name') && names.has('full_name')

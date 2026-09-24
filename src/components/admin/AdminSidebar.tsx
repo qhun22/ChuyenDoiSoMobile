@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -15,7 +16,7 @@ interface AdminSidebarProps {
   onSelectSection: (section: string) => void;
 }
 
-export default function AdminSidebar({ activeSection, onSelectSection }: AdminSidebarProps) {
+function AdminSidebarContent({ activeSection, onSelectSection }: AdminSidebarProps) {
   const searchParams = useSearchParams();
   const currentSection = activeSection || searchParams.get('section') || 'brands';
 
@@ -182,3 +183,25 @@ export default function AdminSidebar({ activeSection, onSelectSection }: AdminSi
     </aside>
   );
 }
+
+export default function AdminSidebar(props: AdminSidebarProps) {
+  return (
+    <Suspense
+      fallback={
+        <aside className="w-full md:w-56 shrink-0 bg-white border-r border-slate-200 p-4 min-h-[calc(100vh-80px)] flex flex-col justify-between">
+          <div className="space-y-4">
+            <div className="h-5 bg-slate-100 rounded w-2/3 animate-pulse"></div>
+            <div className="space-y-2 pt-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-8 bg-slate-100 rounded animate-pulse"></div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      }
+    >
+      <AdminSidebarContent {...props} />
+    </Suspense>
+  );
+}
+

@@ -253,10 +253,15 @@ async function updateDefault(request: Request) {
     const keys = [identity.email, identity.id, 'admin@hotmail.com', 'dev-admin'].filter(Boolean) as string[];
     for (const key of keys) {
       const list = devAddresses.get(key) ?? [];
-      devAddresses.set(key, list.map((address) => ({ ...address, is_default: address.id === addressId ? 1 : 0 })));
+      const updated = list.map((address) => ({ ...address, is_default: address.id === addressId ? 1 : 0 }));
+      const target = updated.find((a) => a.id === addressId);
+      const others = updated.filter((a) => a.id !== addressId);
+      const sorted = target ? [target, ...others] : updated;
+      devAddresses.set(key, sorted);
     }
     return Response.json({ success: true });
   }
+
 
   try {
     const where = identityWhere(identity);

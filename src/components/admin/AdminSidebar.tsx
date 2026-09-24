@@ -134,9 +134,8 @@ function AdminSidebarContent({ activeSection, onSelectSection }: AdminSidebarPro
   ];
 
   return (
-    <aside className="w-full md:w-56 lg:w-60 shrink-0 bg-white border-r border-slate-100 min-h-screen p-4 flex flex-col justify-between font-['Signika',sans-serif]">
-      <div className="space-y-3">
-
+    <aside className="w-52 shrink-0 border-r border-slate-100 pr-3 flex flex-col justify-between font-['Signika',sans-serif]">
+      <div className="space-y-2">
         {/* Danh sách Menu dọc */}
         <nav className="space-y-0.5">
           {NAV_ITEMS.map((item) => {
@@ -147,9 +146,9 @@ function AdminSidebarContent({ activeSection, onSelectSection }: AdminSidebarPro
                 key={item.id}
                 type="button"
                 onClick={() => onSelectSection(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs transition-all duration-150 cursor-pointer ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 cursor-pointer ${
                   isActive
-                    ? 'bg-slate-50 text-[#b80012] font-bold border-l-2 border-[#b80012] pl-2.5'
+                    ? 'bg-slate-50 text-[#b80012] font-bold border-l-2 border-[#b80012] pl-2'
                     : 'text-slate-700 hover:text-slate-950 hover:bg-slate-50/80 font-medium'
                 }`}
               >
@@ -162,15 +161,12 @@ function AdminSidebarContent({ activeSection, onSelectSection }: AdminSidebarPro
       </div>
 
       {/* Footer Về trang chủ */}
-      <div className="pt-3 border-t border-slate-100 mt-4">
+      <div className="pt-2.5 border-t border-slate-100 mt-3">
         <Link
           href="/"
-          className="flex items-center justify-center gap-2 w-full py-2.5 px-3 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold transition"
+          className="flex items-center justify-center gap-1.5 w-full py-1.5 px-2.5 rounded-lg border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-xs font-semibold transition"
         >
-          <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span>Về trang chủ</span>
+          <span>Home</span>
         </Link>
       </div>
     </aside>
@@ -181,14 +177,11 @@ export default function AdminSidebar(props: AdminSidebarProps) {
   return (
     <Suspense
       fallback={
-        <aside className="w-full md:w-56 shrink-0 bg-white border-r border-slate-200 p-4 min-h-[calc(100vh-80px)] flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="h-5 bg-slate-100 rounded w-2/3 animate-pulse"></div>
-            <div className="space-y-2 pt-2">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-8 bg-slate-100 rounded animate-pulse"></div>
-              ))}
-            </div>
+        <aside className="w-52 shrink-0 border-r border-slate-100 pr-3 min-h-[calc(100vh-80px)] flex flex-col justify-between">
+          <div className="space-y-2 pt-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-7 bg-slate-100 rounded animate-pulse"></div>
+            ))}
           </div>
         </aside>
       }

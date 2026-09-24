@@ -12,11 +12,28 @@
   box-sizing: border-box;
 }
 
+/* Tùy biến thanh cuộn mỏng nhẹ cho toàn trang */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* slate-300 */
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* slate-400 */
+}
+
 body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
+  overflow-x: hidden;
 }
 
 a {

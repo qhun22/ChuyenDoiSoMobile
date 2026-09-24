@@ -312,27 +312,27 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
   };
 
   return (
-    <div className="w-full space-y-5 font-['Signika',sans-serif]">
+    <div className="w-full space-y-3.5 font-['Signika',sans-serif]">
       {/* 1. THANH TIÊU ĐỀ & TÁC VỤ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/60">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-slate-200/60">
         <div>
-          <h1 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-wide">
+          <h1 className="text-lg font-black text-slate-900 uppercase tracking-wide">
             Quản lý sản phẩm
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5 font-medium">
+          <p className="text-[11px] text-slate-400 mt-0.5 font-medium">
             Quản lý thông tin, giá bán, kho hàng và biến thể chi tiết
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Ô Tìm kiếm Real-time */}
-          <div className="relative flex-1 sm:w-60">
+          <div className="relative w-40 sm:w-52">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm sản phẩm..."
-              className="w-full h-8 px-3 pr-7 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#b80012] transition"
+              className="w-full h-7 px-2.5 pr-6 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#b80012] transition"
             />
             {searchTerm && (
               <button
@@ -349,7 +349,7 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
           <select
             value={selectedBrandFilter}
             onChange={(e) => setSelectedBrandFilter(e.target.value)}
-            className="h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-[#b80012] cursor-pointer"
+            className="h-7 px-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-[#b80012] cursor-pointer"
           >
             <option value="">Tất cả hãng</option>
             {brands.map((b) => (
@@ -363,9 +363,9 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
           <button
             type="button"
             onClick={handleReset}
-            className="h-8 px-3 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            className="h-7 px-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold flex items-center gap-1 transition cursor-pointer"
           >
-            <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             <span>Reset</span>
@@ -375,127 +375,130 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
           <button
             type="button"
             onClick={handleOpenAddModal}
-            className="flex items-center gap-1.5 h-8 px-3.5 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white font-semibold text-xs shadow-xs transition active:scale-95 cursor-pointer shrink-0"
+            className="flex items-center gap-1 h-7 px-3 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white font-medium text-xs shadow-xs transition active:scale-95 cursor-pointer shrink-0"
           >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+            </svg>
             <span>Thêm sản phẩm</span>
           </button>
         </div>
       </div>
 
-      {/* 2. 5 BOX THỐNG KÊ HÀNG NGANG (Gọn gàng p-3 text-xl font-bold) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
+      {/* 2. 5 BOX THỐNG KÊ HÀNG NGANG */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-2.5 w-full mb-3.5">
         {/* Box 1: Tổng số sản phẩm */}
         <div
           onClick={() => setSelectedStockFilter('all')}
-          className={`p-3 rounded-xl border transition cursor-pointer ${
+          className={`p-2.5 rounded-xl border transition cursor-pointer ${
             selectedStockFilter === 'all'
-              ? 'bg-white border-[#b80012] ring-1 ring-[#b80012]/30 shadow-xs'
+              ? 'bg-white border-slate-300 shadow-2xs ring-1 ring-slate-300/50'
               : 'bg-white border-slate-100 shadow-2xs hover:border-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Tổng sản phẩm</span>
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 leading-tight">{totalCount}</p>
+          <p className="text-lg font-bold text-slate-800 mt-0.5 leading-tight">{totalCount}</p>
           <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Toàn bộ kho hàng</p>
         </div>
 
         {/* Box 2: Đang bán (Còn hàng) */}
         <div
           onClick={() => setSelectedStockFilter('in_stock')}
-          className={`p-3 rounded-xl border transition cursor-pointer ${
+          className={`p-2.5 rounded-xl border transition cursor-pointer ${
             selectedStockFilter === 'in_stock'
-              ? 'bg-white border-[#b80012] ring-1 ring-[#b80012]/30 shadow-xs'
+              ? 'bg-white border-slate-300 shadow-2xs ring-1 ring-slate-300/50'
               : 'bg-white border-slate-100 shadow-2xs hover:border-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Đang bán (Còn hàng)</span>
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 leading-tight">{inStockCount}</p>
+          <p className="text-lg font-bold text-slate-800 mt-0.5 leading-tight">{inStockCount}</p>
           <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Sẵn sàng giao ngay</p>
         </div>
 
         {/* Box 3: Hết hàng */}
         <div
           onClick={() => setSelectedStockFilter('out_of_stock')}
-          className={`p-3 rounded-xl border transition cursor-pointer ${
+          className={`p-2.5 rounded-xl border transition cursor-pointer ${
             selectedStockFilter === 'out_of_stock'
-              ? 'bg-white border-[#b80012] ring-1 ring-[#b80012]/30 shadow-xs'
+              ? 'bg-white border-slate-300 shadow-2xs ring-1 ring-slate-300/50'
               : 'bg-white border-slate-100 shadow-2xs hover:border-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Hết hàng</span>
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 leading-tight">{outOfStockCount}</p>
+          <p className="text-lg font-bold text-slate-800 mt-0.5 leading-tight">{outOfStockCount}</p>
           <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Cần nhập thêm hàng</p>
         </div>
 
         {/* Box 4: Giảm giá / Khuyến mãi */}
         <div
           onClick={() => setSelectedStockFilter('discount')}
-          className={`p-3 rounded-xl border transition cursor-pointer ${
+          className={`p-2.5 rounded-xl border transition cursor-pointer ${
             selectedStockFilter === 'discount'
-              ? 'bg-white border-[#b80012] ring-1 ring-[#b80012]/30 shadow-xs'
+              ? 'bg-white border-slate-300 shadow-2xs ring-1 ring-slate-300/50'
               : 'bg-white border-slate-100 shadow-2xs hover:border-slate-200'
           }`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Giảm giá / Ưu đãi</span>
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
             </svg>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 leading-tight">{discountCount}</p>
+          <p className="text-lg font-bold text-slate-800 mt-0.5 leading-tight">{discountCount}</p>
           <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Đang chạy khuyến mãi</p>
         </div>
 
         {/* Box 5: Kết quả hiển thị */}
-        <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
+        <div className="bg-white p-2.5 rounded-xl border border-slate-100 shadow-2xs hover:border-slate-200 transition">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500">Kết quả hiển thị</span>
-            <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-slate-900 mt-1 leading-tight">{filteredCount}</p>
+          <p className="text-lg font-bold text-slate-800 mt-0.5 leading-tight">{filteredCount}</p>
           <p className="text-[11px] text-slate-400 mt-0.5 font-medium">Theo tiêu chí lọc</p>
         </div>
       </div>
 
       {/* 3. BẢNG DANH SÁCH SẢN PHẨM */}
       <div className="bg-white rounded-xl border border-slate-100 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="w-full overflow-x-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-                <th className="py-2.5 px-3 w-12 text-center">STT</th>
-                <th className="py-2.5 px-3 w-14 text-center">Ảnh</th>
-                <th className="py-2.5 px-3 min-w-[180px]">Tên sản phẩm</th>
-                <th className="py-2.5 px-3 w-24">Hãng</th>
-                <th className="py-2.5 px-3 w-20 text-center">Tồn kho</th>
-                <th className="py-2.5 px-3 w-28 text-right">Giá gốc</th>
-                <th className="py-2.5 px-3 w-16 text-center">Giảm</th>
-                <th className="py-2.5 px-3 w-28 text-right">Giá treo</th>
-                <th className="py-2.5 px-3 w-44 text-right">Hành động</th>
+              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 text-[11px] font-semibold uppercase tracking-wider">
+                <th className="py-2 px-2.5 w-10 text-center whitespace-nowrap">STT</th>
+                <th className="py-2 px-2.5 w-12 text-center whitespace-nowrap">Ảnh</th>
+                <th className="py-2 px-2.5 min-w-[200px] text-left whitespace-nowrap">Tên sản phẩm</th>
+                <th className="py-2 px-2.5 w-24 text-left whitespace-nowrap">Hãng</th>
+                <th className="py-2 px-2.5 w-20 text-center whitespace-nowrap">Tồn kho</th>
+                <th className="py-2 px-2.5 w-24 text-right whitespace-nowrap">Giá gốc</th>
+                <th className="py-2 px-2.5 w-14 text-center whitespace-nowrap">Giảm</th>
+                <th className="py-2 px-2.5 w-28 text-right whitespace-nowrap">Giá treo</th>
+                <th className="py-2 px-2.5 w-32 text-center whitespace-nowrap">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center text-slate-400">
-                    <div className="flex items-center justify-center gap-2.5">
-                      <svg className="w-5 h-5 animate-spin text-[#b80012]" fill="none" viewBox="0 0 24 24">
+                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <svg className="w-4 h-4 animate-spin text-[#b80012]" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
@@ -505,41 +508,39 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                 </tr>
               ) : filteredProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={9} className="py-10 text-center text-slate-400">
                     Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.
                   </td>
                 </tr>
               ) : (
-
                 filteredProducts.map((p, idx) => (
-
-                  <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
+                  <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50/70 transition-colors">
                     {/* STT */}
-                    <td className="py-2.5 px-3 text-center font-semibold text-slate-400 text-xs">
+                    <td className="align-middle py-2 px-2.5 w-10 text-center font-semibold text-slate-400 text-xs whitespace-nowrap">
                       {idx + 1}
                     </td>
 
-                    {/* Ảnh Thumbnail 36x36 */}
-                    <td className="py-2.5 px-3 text-center">
-                      <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center p-0.5 mx-auto shrink-0">
+                    {/* Cột Ảnh */}
+                    <td className="align-middle py-2 px-2.5 w-12 text-center">
+                      <div className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center p-0.5 mx-auto shrink-0">
                         {p.image ? (
                           <img
                             src={p.image}
                             alt={p.name}
-                            className="w-full h-full object-contain"
+                            className="w-full h-full object-contain mx-auto"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=100&auto=format&fit=crop&q=60';
                             }}
                           />
                         ) : (
-                          <span className="text-[10px] text-slate-400 font-bold">N/A</span>
+                          <span className="text-[9px] text-slate-400 font-bold">N/A</span>
                         )}
                       </div>
                     </td>
 
-                    {/* Tên sản phẩm */}
-                    <td className="py-2.5 px-3">
+                    {/* Cột Tên sản phẩm */}
+                    <td className="align-middle py-2 px-2.5 min-w-[200px] text-left">
                       <div>
                         <span className="font-bold text-slate-900 text-xs sm:text-sm block leading-tight">
                           {p.name}
@@ -550,55 +551,51 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                       </div>
                     </td>
 
-                    {/* Hãng */}
-                    <td className="py-2.5 px-3">
-                      <span className="inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-bold text-[11px] tracking-wide">
-                        {p.brand}
-                      </span>
+                    {/* Cột Hãng */}
+                    <td className="align-middle py-2 px-2.5 w-24 text-left whitespace-nowrap font-medium text-slate-600 text-xs">
+                      {p.brand}
                     </td>
 
-                    {/* Tồn kho */}
-                    <td className="py-2.5 px-3 text-center">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold ${
-                          (p.stock ?? 0) > 0
-                            ? 'bg-slate-100 text-slate-800'
-                            : 'bg-red-50 text-[#b80012] border border-red-100'
-                        }`}
-                      >
-                        {p.stock ?? 0}
-                      </span>
-                    </td>
-
-                    {/* Giá gốc */}
-                    <td className="py-2.5 px-3 text-right text-slate-400 line-through">
-                      {formatVND(p.original_price)}
-                    </td>
-
-                    {/* Giảm */}
-                    <td className="py-2.5 px-3 text-center">
-                      {p.discount_percent > 0 ? (
-                        <span className="inline-block px-1.5 py-0.5 rounded bg-red-50 text-[#b80012] text-[10px] font-bold">
-                          -{p.discount_percent}%
+                    {/* Cột Tồn kho */}
+                    <td className="align-middle py-2 px-2.5 w-20 text-center whitespace-nowrap">
+                      {(p.stock ?? 0) === 0 ? (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">
+                          Hết
                         </span>
                       ) : (
-                        <span className="text-slate-300 text-[11px]">-</span>
+                        <span className="font-semibold text-slate-700 text-xs">
+                          {p.stock}
+                        </span>
                       )}
                     </td>
 
-                    {/* Giá treo (Bán) */}
-                    <td className="py-2.5 px-3 text-right font-bold text-slate-900">
+                    {/* Cột Giá gốc */}
+                    <td className="align-middle py-2 px-2.5 w-24 text-right whitespace-nowrap text-slate-400 line-through text-xs">
+                      {formatVND(p.original_price)}
+                    </td>
+
+                    {/* Cột Giảm (%) */}
+                    <td className="align-middle py-2 px-2.5 w-14 text-center whitespace-nowrap text-rose-600 font-bold text-xs">
+                      {p.discount_percent > 0 ? (
+                        <span>-{p.discount_percent}%</span>
+                      ) : (
+                        <span className="text-slate-300 font-normal">-</span>
+                      )}
+                    </td>
+
+                    {/* Cột Giá treo (Giá bán) */}
+                    <td className="align-middle py-2 px-2.5 w-28 text-right whitespace-nowrap text-[#b80012] font-bold text-xs sm:text-sm">
                       {formatVND(p.price)}
                     </td>
 
-                    {/* Hành động: [Chi tiết] [Sửa] [Xóa] */}
-                    <td className="py-2.5 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                    {/* Cột Hành động: [Chi tiết] [Sửa] [Xóa] */}
+                    <td className="align-middle py-2 px-2.5 w-32 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                         {/* Chi tiết */}
                         <button
                           type="button"
                           onClick={() => onOpenDetail && onOpenDetail(p)}
-                          className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition cursor-pointer"
+                          className="h-6 px-2 text-[10px] rounded font-medium border inline-flex items-center justify-center bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition cursor-pointer"
                         >
                           Chi tiết
                         </button>
@@ -607,7 +604,7 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                         <button
                           type="button"
                           onClick={() => handleOpenEditModal(p)}
-                          className="rounded border border-amber-200 bg-amber-50/50 px-2 py-1 text-[11px] font-medium text-amber-800 hover:bg-amber-100/70 hover:border-amber-300 transition cursor-pointer"
+                          className="h-6 px-2 text-[10px] rounded font-medium border inline-flex items-center justify-center bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition cursor-pointer"
                         >
                           Sửa
                         </button>
@@ -616,7 +613,7 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                         <button
                           type="button"
                           onClick={() => handleOpenDeleteModal(p)}
-                          className="rounded border border-red-200 bg-red-50/40 px-2 py-1 text-[11px] font-medium text-[#b80012] hover:bg-red-50 hover:border-red-300 transition cursor-pointer"
+                          className="h-6 px-2 text-[10px] rounded font-medium border inline-flex items-center justify-center bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 transition cursor-pointer"
                         >
                           Xóa
                         </button>

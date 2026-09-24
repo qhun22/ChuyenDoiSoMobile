@@ -12,7 +12,7 @@ export default function AdminBrandsPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full min-h-screen bg-white font-['Signika',sans-serif] items-stretch">
+    <div className="-mx-2 sm:-mx-4 -my-3 w-[calc(100%+1rem)] sm:w-[calc(100%+2rem)] flex flex-col md:flex-row min-h-screen bg-white font-['Signika',sans-serif] items-stretch">
       <AdminSidebar
         activeSection="brands"
         onSelectSection={handleSelectSection}

@@ -112,7 +112,7 @@ const MOCK_PRODUCTS = [
 
 export default function HomePage() {
   return (
-    <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 py-3 space-y-4">
+    <div className="space-y-4">
       {/* 1. Header Slider Banner */}
       <HeroVideoSlider />
 

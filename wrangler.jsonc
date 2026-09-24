@@ -20,5 +20,11 @@
       "database_name": "qhun_mobile_db",
       "database_id": "9ddbac15-33b1-4c4b-b955-29054cfd1aea"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "BUCKET",
+      "bucket_name": "chuyendoisomobile-uploads"
+    }
   ]
 }

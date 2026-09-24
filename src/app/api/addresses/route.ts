@@ -141,8 +141,17 @@ export async function GET(request: Request) {
   }
 
   const where = identityWhere(identity);
-  try {
-    const result = await database.prepare(`SELECT id, user_email, user_id, name, phone, province, detail, is_default, created_at FROM addresses WHERE ${where.sql} ORDER BY is_default DESC, created_at DESC, id DESC`).bind(...where.values).all<AddressRow>();
+    const columns = await database.prepare('PRAGMA table_info(addresses)').all<{ name: string }>();
+    const names = new Set((columns.results ?? []).map((col) => col.name));
+    const nameCol = names.has('name') && names.has('full_name')
+      ? 'COALESCE(name, full_name, "") as name'
+      : names.has('full_name')
+      ? 'full_name as name'
+      : 'name';
+
+    const result = await database.prepare(
+      `SELECT id, user_email, user_id, ${nameCol}, phone, province, detail, is_default, created_at FROM addresses WHERE ${where.sql} ORDER BY is_default DESC, created_at DESC, id DESC`
+    ).bind(...where.values).all<AddressRow>();
     return Response.json({ addresses: (result.results ?? []).map(toAddress) });
   } catch {
     return Response.json({ addresses: [] });
@@ -214,9 +223,22 @@ export async function POST(request: Request) {
     const email = identity.email || identity.id || 'admin@hotmail.com';
     const userId = identity.id || 'dev-admin';
     
-    const result = await database.prepare(
-      'INSERT INTO addresses (user_email, user_id, name, phone, province, detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).bind(email, userId, name, phone, province, detail, shouldBeDefault ? 1 : 0).run();
+    // Check available columns in addresses table to safely satisfy any NOT NULL constraint on full_name or name
+    const columns = await database.prepare('PRAGMA table_info(addresses)').all<{ name: string }>();
+    const colNames = new Set((columns.results ?? []).map((col) => col.name));
+
+    let insertQuery = 'INSERT INTO addresses (user_email, user_id, name, phone, province, detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    let bindValues: any[] = [email, userId, name, phone, province, detail, shouldBeDefault ? 1 : 0];
+
+    if (colNames.has('full_name') && colNames.has('name')) {
+      insertQuery = 'INSERT INTO addresses (user_email, user_id, name, full_name, phone, province, detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      bindValues = [email, userId, name, name, phone, province, detail, shouldBeDefault ? 1 : 0];
+    } else if (colNames.has('full_name') && !colNames.has('name')) {
+      insertQuery = 'INSERT INTO addresses (user_email, user_id, full_name, phone, province, detail, is_default) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      bindValues = [email, userId, name, phone, province, detail, shouldBeDefault ? 1 : 0];
+    }
+    
+    const result = await database.prepare(insertQuery).bind(...bindValues).run();
     
     const newId = Number(result?.meta?.last_row_id) || Date.now();
     return Response.json({ 

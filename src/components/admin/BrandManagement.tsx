@@ -12,10 +12,24 @@ export interface BrandItem {
   created_at?: string;
 }
 
+const INITIAL_BRANDS: BrandItem[] = [
+  { id: 1, name: 'APPLE', slug: 'apple', logo: '/icons/logo_iphone_ngang_eac93ff477.webp', product_count: 5, created_at: '2026-02-24 10:00:00' },
+  { id: 2, name: 'BENCO', slug: 'benco', logo: null, product_count: 0, created_at: '2026-02-28 10:00:00' },
+  { id: 3, name: 'HONOR', slug: 'honor', logo: null, product_count: 0, created_at: '2026-02-28 10:00:00' },
+  { id: 4, name: 'OPPO', slug: 'oppo', logo: null, product_count: 1, created_at: '2026-02-24 10:00:00' },
+  { id: 5, name: 'REALME', slug: 'realme', logo: null, product_count: 1, created_at: '2026-02-28 10:00:00' },
+  { id: 6, name: 'RED MAGIC', slug: 'red-magic', logo: null, product_count: 1, created_at: '2026-02-28 10:00:00' },
+  { id: 7, name: 'SAMSUNG', slug: 'samsung', logo: '/icons/logo_samsung_ngang_1624d75bd8.webp', product_count: 1, created_at: '2026-02-24 10:00:00' },
+  { id: 8, name: 'TECNO', slug: 'tecno', logo: null, product_count: 0, created_at: '2026-02-28 10:00:00' },
+  { id: 9, name: 'VIVO', slug: 'vivo', logo: null, product_count: 1, created_at: '2026-02-28 10:00:00' },
+  { id: 10, name: 'XIAOMI', slug: 'xiaomi', logo: '/icons/logo_xiaomi_ngang_0faf267234.webp', product_count: 1, created_at: '2026-02-24 10:00:00' },
+];
+
 export default function BrandManagement() {
-  const [brands, setBrands] = useState<BrandItem[]>([]);
+  const [brands, setBrands] = useState<BrandItem[]>(INITIAL_BRANDS);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
 
   // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -29,21 +43,30 @@ export default function BrandManagement() {
   const [formSlug, setFormSlug] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch Brands from API
+  // Fetch Brands from API (3s loading pattern)
   const fetchBrands = async () => {
     try {
       setLoading(true);
+      const startTime = Date.now();
       const res = await fetch('/api/brands');
       const data = await res.json();
-      if (data.success && Array.isArray(data.data)) {
-        setBrands(data.data);
-      }
+      
+      const elapsed = Date.now() - startTime;
+      const remaining = Math.max(0, 3000 - elapsed);
+      setTimeout(() => {
+        if (data.success && Array.isArray(data.data)) {
+          setBrands(data.data);
+        }
+        setLoading(false);
+      }, remaining);
     } catch {
-      toast.error('Không thể tải danh sách hãng');
-    } finally {
-      setLoading(false);
+      setTimeout(() => {
+        toast.error('Không thể tải danh sách hãng');
+        setLoading(false);
+      }, 3000);
     }
   };
+
 
   useEffect(() => {
     fetchBrands();

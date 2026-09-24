@@ -53,15 +53,16 @@ function DashboardContent() {
   };
 
   return (
-    <div className="-mx-2 sm:-mx-4 -my-3 w-[calc(100%+1rem)] sm:w-[calc(100%+2rem)] flex flex-col md:flex-row min-h-screen bg-white font-['Signika',sans-serif] items-stretch">
-      {/* CỘT TRÁI (AdminSidebar): Dính sát mép trái */}
+    <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] px-4 sm:px-6 py-4 flex flex-col md:flex-row gap-5 bg-white min-h-[calc(100vh-80px)] font-['Signika',sans-serif] items-stretch">
+      {/* CỘT TRÁI (AdminSidebar): Cố định độ rộng */}
       <AdminSidebar
         activeSection={activeSection}
         onSelectSection={handleSelectSection}
       />
 
-      {/* CỘT PHẢI: Tràn tối đa sang mép phải */}
-      <main className="flex-1 w-full min-w-0 p-6 sm:p-8 bg-[#fafafa]">
+      {/* CỘT PHẢI: Content panel dãn hết phần còn lại */}
+      <main className="flex-1 min-w-0 bg-[#fafafa] rounded-xl p-4 sm:p-6 border border-slate-100/80">
+
         {/* QUẢN LÝ HÃNG */}
         {activeSection === 'brands' && <BrandManagement />}
 

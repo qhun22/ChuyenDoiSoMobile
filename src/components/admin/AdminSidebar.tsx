@@ -136,13 +136,6 @@ function AdminSidebarContent({ activeSection, onSelectSection }: AdminSidebarPro
   return (
     <aside className="w-full md:w-56 lg:w-60 shrink-0 bg-white border-r border-slate-100 min-h-screen p-4 flex flex-col justify-between font-['Signika',sans-serif]">
       <div className="space-y-3">
-        {/* Header Sidebar Tối giản */}
-        <div className="px-2 py-2 border-b border-slate-100">
-          <h2 className="font-black text-xs sm:text-sm text-slate-900 tracking-wide uppercase">
-            Quản trị hệ thống
-          </h2>
-          <p className="text-[11px] text-slate-400 font-medium">Bảng điều khiển Admin</p>
-        </div>
 
         {/* Danh sách Menu dọc */}
         <nav className="space-y-0.5">

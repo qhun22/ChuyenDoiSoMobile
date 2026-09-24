@@ -114,9 +114,18 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
   });
 
   const [brands, setBrands] = useState<string[]>(DEFAULT_BRANDS);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBrandFilter, setSelectedBrandFilter] = useState('');
   const [selectedStockFilter, setSelectedStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock' | 'discount'>('all');
+
+  // 3s loading timer
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,6 +151,7 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
       })
       .catch(() => {});
   }, []);
+
 
   // Lọc sản phẩm theo Search & Filter
   const filteredProducts = useMemo(() => {
@@ -476,19 +486,33 @@ export default function ProductManagement({ onOpenDetail }: ProductManagementPro
                 <th className="py-2.5 px-3 w-20 text-center">Tồn kho</th>
                 <th className="py-2.5 px-3 w-28 text-right">Giá gốc</th>
                 <th className="py-2.5 px-3 w-16 text-center">Giảm</th>
-                <th className="py-2.5 px-3 w-28 text-right">Giá treo (Bán)</th>
+                <th className="py-2.5 px-3 w-28 text-right">Giá treo</th>
                 <th className="py-2.5 px-3 w-44 text-right">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-medium text-slate-700">
-              {filteredProducts.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
+                    <div className="flex items-center justify-center gap-2.5">
+                      <svg className="w-5 h-5 animate-spin text-[#b80012]" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      <span className="text-xs font-medium text-slate-500">Đang tải dữ liệu sản phẩm...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredProducts.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-400">
                     Không tìm thấy sản phẩm nào phù hợp với bộ lọc hiện tại.
                   </td>
                 </tr>
               ) : (
+
                 filteredProducts.map((p, idx) => (
+
                   <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
                     {/* STT */}
                     <td className="py-2.5 px-3 text-center font-semibold text-slate-400 text-xs">

@@ -20,6 +20,8 @@ export interface ProductItem {
   original_price?: number;
   discount_percent?: number;
   stock?: number;
+  inStock?: boolean;
+  installment0?: boolean;
   brand?: string;
   os?: string;
   rom?: string;

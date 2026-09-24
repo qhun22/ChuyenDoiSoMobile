@@ -13,6 +13,8 @@ export interface ProductItem {
   discounted_price?: number;
   original_price?: number;
   stock?: number;
+  inStock?: boolean;
+  installment0?: boolean;
 }
 
 interface HotSaleBoxProps {

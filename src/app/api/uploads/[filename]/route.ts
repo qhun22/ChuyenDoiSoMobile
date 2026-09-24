@@ -47,14 +47,16 @@ export async function GET(
         const object = await r2Bucket.get(filename);
         if (object) {
           const headers = new Headers();
-          object.writeHttpMetadata(headers);
-          headers.set('etag', object.httpEtag);
+          (object.writeHttpMetadata as (headers: any) => void)(headers);
+          if (object.httpEtag) {
+            headers.set('etag', object.httpEtag);
+          }
           headers.set('Cache-Control', 'public, max-age=31536000, immutable');
           if (!headers.get('Content-Type')) {
             headers.set('Content-Type', contentType);
           }
 
-          return new Response(object.body, {
+          return new Response(object.body as unknown as BodyInit, {
             headers,
           });
         }

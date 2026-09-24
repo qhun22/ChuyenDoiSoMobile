@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
     if (r2Bucket) {
       // Lưu file trực tiếp vào Cloudflare R2
-      await r2Bucket.put(filename, buffer, {
+      await (r2Bucket as any).put(filename, arrayBuffer, {
         httpMetadata: {
           contentType: mimeType,
           cacheControl: 'public, max-age=31536000, immutable',

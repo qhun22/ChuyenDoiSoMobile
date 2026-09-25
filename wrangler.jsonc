@@ -4,6 +4,9 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-09-22",
   "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "TURNSTILE_SECRET_KEY": "0x4AAAAAAE_tRiGFPZCrBWNBeD_5OzY95es"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"

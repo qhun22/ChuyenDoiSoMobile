@@ -25,31 +25,89 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const initialSection = searchParams.get('section') || 'brands';
+  const initialProductId = searchParams.get('productId');
   const [activeSection, setActiveSection] = useState(initialSection);
-  const [selectedProduct, setSelectedProduct] = useState<AdminProductItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<AdminProductItem | null>(() => {
+    if (typeof window !== 'undefined' && initialSection === 'products' && initialProductId) {
+      try {
+        const saved = sessionStorage.getItem('admin_active_product_detail');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (String(parsed.id) === String(initialProductId)) {
+            return parsed;
+          }
+        }
+      } catch {}
+    }
+    return null;
+  });
 
   useEffect(() => {
-    const s = searchParams.get('section');
+    const s = searchParams.get('section') || 'brands';
+    const pId = searchParams.get('productId');
+
     if (s && s !== activeSection) {
       setActiveSection(s);
-      if (s !== 'products' && s !== 'product-detail') {
-        setSelectedProduct(null);
-      }
+    }
+
+    if (s === 'products' && pId) {
+      // 1. Phục hồi ngay lập tức từ sessionStorage nếu có
+      try {
+        const saved = sessionStorage.getItem('admin_active_product_detail');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (String(parsed.id) === String(pId)) {
+            setSelectedProduct(parsed);
+          }
+        }
+      } catch {}
+
+      // 2. Fetch dữ liệu mới nhất từ cơ sở dữ liệu để đồng bộ
+      fetch(`/api/products?t=${Date.now()}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.data)) {
+            const found = data.data.find((item: AdminProductItem) => String(item.id) === String(pId));
+            if (found) {
+              setSelectedProduct(found);
+              try {
+                sessionStorage.setItem('admin_active_product_detail', JSON.stringify(found));
+              } catch {}
+            }
+          }
+        })
+        .catch(() => {});
+    } else if (s !== 'products') {
+      setSelectedProduct(null);
+      try {
+        sessionStorage.removeItem('admin_active_product_detail');
+      } catch {}
     }
   }, [searchParams, activeSection]);
 
   const handleSelectSection = (section: string) => {
     setActiveSection(section);
     setSelectedProduct(null);
+    try {
+      sessionStorage.removeItem('admin_active_product_detail');
+    } catch {}
     router.push(`/dashboard?section=${section}`, { scroll: false });
   };
 
   const handleOpenProductDetail = (p: AdminProductItem) => {
     setSelectedProduct(p);
+    try {
+      sessionStorage.setItem('admin_active_product_detail', JSON.stringify(p));
+    } catch {}
+    router.push(`/dashboard?section=products&productId=${p.id}`, { scroll: false });
   };
 
   const handleBackToProductList = () => {
     setSelectedProduct(null);
+    try {
+      sessionStorage.removeItem('admin_active_product_detail');
+    } catch {}
+    router.push(`/dashboard?section=products`, { scroll: false });
   };
 
   return (

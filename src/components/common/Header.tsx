@@ -33,7 +33,7 @@ export default function Header() {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Badges
-  const [counts] = useState({
+  const [counts, setCounts] = useState({
     wishlist: 0,
     cart: 0,
     order: 0,
@@ -42,6 +42,19 @@ export default function Header() {
   const searchBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const updateCartCount = () => {
+      try {
+        const raw = localStorage.getItem('cart_items');
+        const items = raw ? JSON.parse(raw) : [];
+        setCounts((prev) => ({ ...prev, cart: items.length }));
+      } catch {
+        setCounts((prev) => ({ ...prev, cart: 0 }));
+      }
+    };
+
+    updateCartCount();
+    window.addEventListener('cart_updated', updateCartCount);
+
     const loadUserName = () => {
       try {
         const storedUser = localStorage.getItem('user_info');
@@ -60,9 +73,13 @@ export default function Header() {
 
     loadUserName();
     window.addEventListener('auth-state-changed', loadUserName);
-    window.addEventListener('storage', loadUserName);
+    window.addEventListener('storage', () => {
+      loadUserName();
+      updateCartCount();
+    });
 
     return () => {
+      window.removeEventListener('cart_updated', updateCartCount);
       window.removeEventListener('auth-state-changed', loadUserName);
       window.removeEventListener('storage', loadUserName);
     };

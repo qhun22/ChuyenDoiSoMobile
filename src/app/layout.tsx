@@ -32,7 +32,7 @@ export default function RootLayout({
       <body className="bg-[#f8f9fa] text-slate-800 font-['Signika',sans-serif]">
         <div id="qhPageWrap" className="flex min-h-screen flex-col">
           <Header />
-          <main className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-4 py-3">
+          <main className="flex-1 w-full max-w-[1240px] 2xl:max-w-[1340px] mx-auto px-2 sm:px-4 py-3">
             {children}
           </main>
           <Footer />

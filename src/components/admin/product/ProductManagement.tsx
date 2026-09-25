@@ -70,12 +70,16 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
   // Fetch products from database (with session caching)
   const fetchProducts = async (forceRefresh = false) => {
     try {
-      if (!forceRefresh) {
+      if (forceRefresh) {
+        try {
+          sessionStorage.removeItem('admin_cached_products');
+        } catch {}
+      } else {
         try {
           const cached = sessionStorage.getItem('admin_cached_products');
           if (cached) {
             const parsed = JSON.parse(cached);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
               setProducts(parsed);
               hasLoadedProductsOnce = true;
               setLoading(false);
@@ -88,11 +92,11 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
       const startTime = Date.now();
       if (!hasLoadedProductsOnce) setLoading(true);
 
-      const res = await fetch('/api/products');
+      const res = await fetch(`/api/products?t=${Date.now()}`);
       const data = await res.json();
 
       const elapsed = Date.now() - startTime;
-      const remaining = !hasLoadedProductsOnce ? Math.max(0, 3000 - elapsed) : 0;
+      const remaining = !hasLoadedProductsOnce ? Math.max(0, 500 - elapsed) : 0;
 
       setTimeout(() => {
         if (data.success && Array.isArray(data.data)) {
@@ -109,7 +113,7 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
         toast.error('Không thể tải danh sách sản phẩm');
         hasLoadedProductsOnce = true;
         setLoading(false);
-      }, !hasLoadedProductsOnce ? 3000 : 0);
+      }, !hasLoadedProductsOnce ? 500 : 0);
     }
   };
 
@@ -134,6 +138,7 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
   // Form State (Chỉ giữ 3 trường: Hãng, Tên, Ảnh đại diện)
   const [currentProduct, setCurrentProduct] = useState<AdminProductItem | null>(null);
@@ -299,7 +304,7 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
         });
         const data = await res.json();
         if (data.success) {
-          toast.success(`Đã cập nhật sản phẩm "${formName}" vào database`);
+          toast.success(`Đã cập nhật sản phẩm "${formName}"`);
           setIsModalOpen(false);
           fetchProducts(true);
         } else {
@@ -320,12 +325,13 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
             discount_percent: 0,
             variants: [],
             skus: [],
+            folders: [],
             colorImages: [],
           }),
         });
         const data = await res.json();
         if (data.success) {
-          toast.success(`Đã lưu sản phẩm "${formName}" vào database`);
+          toast.success(`Đã lưu sản phẩm "${formName}"`);
           setIsModalOpen(false);
           fetchProducts(true);
         } else {
@@ -345,7 +351,7 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
     setIsDeleteModalOpen(true);
   };
 
-  // Xác nhận xóa
+  // Xác nhận xóa 1 sản phẩm
   const handleConfirmDelete = async () => {
     if (!deletingProduct) return;
     try {
@@ -355,12 +361,45 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Đã xóa sản phẩm "${deletingProduct.name}" khỏi database`);
+        toast.success(`Đã xóa sản phẩm "${deletingProduct.name}"`);
+        setProducts((prev) => {
+          const next = prev.filter((p) => String(p.id) !== String(deletingProduct.id));
+          try {
+            sessionStorage.setItem('admin_cached_products', JSON.stringify(next));
+          } catch {}
+          return next;
+        });
         setIsDeleteModalOpen(false);
         setDeletingProduct(null);
-        fetchProducts();
+        fetchProducts(true);
       } else {
         toast.error(data.error || 'Xóa sản phẩm thất bại');
+      }
+    } catch {
+      toast.error('Lỗi kết nối máy chủ');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Xác nhận xóa toàn bộ sản phẩm để giải phóng all
+  const handleConfirmDeleteAll = async () => {
+    try {
+      setSubmitting(true);
+      const res = await fetch('/api/products?all=true', {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Đã xóa toàn bộ sản phẩm khỏi database!');
+        setProducts([]);
+        try {
+          sessionStorage.removeItem('admin_cached_products');
+        } catch {}
+        setIsDeleteAllModalOpen(false);
+        fetchProducts(true);
+      } else {
+        toast.error(data.error || 'Xóa toàn bộ sản phẩm thất bại');
       }
     } catch {
       toast.error('Lỗi kết nối máy chủ');
@@ -813,7 +852,7 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
       )}
 
       {/* =========================================================================
-          MODAL XÁC NHẬN XÓA
+          MODAL XÁC NHẬN XÓA 1 SẢN PHẨM
           ========================================================================= */}
       {isDeleteModalOpen && deletingProduct && (
         <div
@@ -841,17 +880,67 @@ export default function ProductManagement({ onOpenDetail, updatedProduct }: Prod
             <div className="flex items-center justify-center gap-2 pt-1">
               <button
                 type="button"
+                disabled={submitting}
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition cursor-pointer"
+                className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition cursor-pointer disabled:opacity-50"
               >
                 Hủy bỏ
               </button>
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleConfirmDelete}
-                className="px-4 py-1.5 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer"
+                className="px-4 py-1.5 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
               >
-                Xác nhận xóa
+                {submitting ? 'Đang xóa...' : 'Xác nhận xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL XÁC NHẬN XÓA TẤT CẢ SẢN PHẨM (GIẢI PHÓNG TOÀN BỘ)
+          ========================================================================= */}
+      {isDeleteAllModalOpen && (
+        <div
+          className="admin-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDeleteAllModalOpen(false);
+          }}
+        >
+          <div className="admin-modal-box max-w-sm p-5 text-center space-y-3.5">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-[#b80012] mx-auto flex items-center justify-center">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+
+            <div>
+              <h3 className="font-extrabold text-sm text-slate-900 uppercase">
+                Xác nhận xóa toàn bộ sản phẩm?
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                Bạn có chắc chắn muốn xóa <strong>toàn bộ {products.length} sản phẩm</strong> để giải phóng database không? Tất cả dữ liệu hình ảnh, biến thể và thông số sẽ bị xóa vĩnh viễn và không thể khôi phục.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setIsDeleteAllModalOpen(false)}
+                className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition cursor-pointer disabled:opacity-50"
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleConfirmDeleteAll}
+                className="px-4 py-1.5 rounded-lg bg-[#b80012] hover:bg-[#99000f] text-white text-xs font-semibold shadow-xs transition active:scale-95 cursor-pointer disabled:opacity-50"
+              >
+                {submitting ? 'Đang xóa tất cả...' : 'Xác nhận xóa hết'}
               </button>
             </div>
           </div>

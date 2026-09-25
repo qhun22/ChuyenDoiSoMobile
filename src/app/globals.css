@@ -799,3 +799,12 @@ legend {
     opacity: 1;
   }
 }
+
+/* Ẩn thanh cuộn nhưng vẫn cho phép vuốt / cuộn chuột ngang */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

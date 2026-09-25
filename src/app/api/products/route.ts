@@ -65,8 +65,8 @@ const INITIAL_PRODUCTS: DbProductItem[] = FEATURED_PRODUCTS.map((p, idx) => ({
     2
   ),
   youtubeId: 'dQw4w9WgXcQ',
-  skus: [`SKU-${p.id}-128G`, `SKU-${p.id}-256G`],
-  folders: ['Mặt trước & Màn hình', 'Mặt lưng & Camera', 'Góc cạnh viền máy'],
+  skus: [],
+  folders: [],
   variants: [
     {
       id: '1',
@@ -85,15 +85,7 @@ const INITIAL_PRODUCTS: DbProductItem[] = FEATURED_PRODUCTS.map((p, idx) => ({
       discount_percent: p.discount_percent,
     },
   ],
-  colorImages: [
-    {
-      id: '1',
-      folder: 'Mặt trước & Màn hình',
-      sku: `SKU-${p.id}-128G`,
-      colorName: 'Titan Tự Nhiên',
-      imageUrl: p.image,
-    },
-  ],
+  colorImages: [],
   description: `<p><strong>${p.name}</strong> mang đến trải nghiệm đột phá với hiệu năng vượt trội, màn hình sắc nét và thời lượng pin ấn tượng cả ngày dài.</p>`,
   created_at: '2026-02-24 10:00:00',
 }));
@@ -200,16 +192,49 @@ function mapDbRowToProduct(row: any): DbProductItem {
 }
 
 // GET /api/products
-export async function GET() {
+export async function GET(request: Request) {
+  let slug: string | null = null;
+  let brand: string | null = null;
+  try {
+    const url = new URL(request.url);
+    slug = url.searchParams.get('slug');
+    brand = url.searchParams.get('brand');
+  } catch {}
+
   const db = await getDatabase();
   if (db) {
     try {
+      if (slug) {
+        const row = await db.prepare("SELECT * FROM products WHERE slug = ?").bind(slug).first();
+        if (row) {
+          return NextResponse.json({ success: true, data: mapDbRowToProduct(row) });
+        }
+      } else if (brand) {
+        const results = await db.prepare("SELECT * FROM products WHERE UPPER(brand) = ? ORDER BY id DESC").bind(brand.toUpperCase()).all();
+        const list = (results.results || []).map(mapDbRowToProduct);
+        return NextResponse.json({ success: true, data: list });
+      }
+
       const results = await db.prepare("SELECT * FROM products ORDER BY id DESC").all();
       const list = (results.results || []).map(mapDbRowToProduct);
+      if (slug) {
+        const found = list.find((p) => p.slug === slug);
+        return NextResponse.json({ success: Boolean(found), data: found || null });
+      }
       return NextResponse.json({ success: true, data: list });
     } catch (err: any) {
-      return NextResponse.json({ success: false, error: err.message, data: devProductsStore }, { status: 500 });
+      // Fallback to in-memory store
     }
+  }
+
+  if (slug) {
+    const found = devProductsStore.find((p) => p.slug === slug);
+    return NextResponse.json({ success: Boolean(found), data: found || null });
+  }
+
+  if (brand) {
+    const filtered = devProductsStore.filter((p) => p.brand.toUpperCase() === brand.toUpperCase());
+    return NextResponse.json({ success: true, data: filtered });
   }
 
   return NextResponse.json({ success: true, data: devProductsStore });
@@ -236,8 +261,8 @@ export async function POST(request: Request) {
     const image = body.image?.trim() || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500&auto=format&fit=crop&q=80';
     const specifications = typeof body.specifications === 'string' ? body.specifications : '{}';
     const youtubeId = body.youtubeId || '';
-    const skus = Array.isArray(body.skus) ? body.skus : [`SKU-${Date.now()}`];
-    const folders = Array.isArray(body.folders) ? body.folders : ['Mặt trước & Màn hình', 'Mặt lưng & Camera', 'Góc cạnh viền máy'];
+    const skus = Array.isArray(body.skus) ? body.skus : [];
+    const folders = Array.isArray(body.folders) ? body.folders : [];
     const variants = Array.isArray(body.variants) ? body.variants : [];
     const colorImages = Array.isArray(body.colorImages) ? body.colorImages : [];
     const description = body.description || `<p>Mô tả chi tiết sản phẩm <strong>${name}</strong>.</p>`;
@@ -418,24 +443,55 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE /api/products (Xóa sản phẩm)
+// DELETE /api/products (Xóa sản phẩm đơn lẻ hoặc Xóa toàn bộ sản phẩm)
 export async function DELETE(request: Request) {
   try {
     const url = new URL(request.url);
-    const id = Number(url.searchParams.get('id'));
-    if (!id) {
+    const rawId = url.searchParams.get('id');
+    const isAll = url.searchParams.get('all') === 'true' || url.searchParams.get('deleteAll') === 'true' || rawId === 'all';
+
+    let bodyData: any = null;
+    try {
+      if (request.headers.get('content-type')?.includes('application/json')) {
+        bodyData = await request.json();
+      }
+    } catch {}
+
+    const deleteAll = isAll || bodyData?.deleteAll === true;
+    const idsToDelete: (number | string)[] = bodyData?.ids && Array.isArray(bodyData.ids)
+      ? bodyData.ids
+      : rawId && rawId !== 'all' ? [rawId] : [];
+
+    if (!deleteAll && idsToDelete.length === 0) {
       return NextResponse.json({ success: false, error: 'ID sản phẩm không hợp lệ' }, { status: 400 });
     }
 
     const db = await getDatabase();
-    if (db) {
-      await db.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
-      return NextResponse.json({ success: true, message: 'Xóa sản phẩm thành công' });
+
+    // 1. Xóa toàn bộ sản phẩm để giải phóng database
+    if (deleteAll) {
+      if (db) {
+        await db.prepare("DELETE FROM products").run();
+      }
+      devProductsStore = [];
+      return NextResponse.json({ success: true, message: 'Đã xóa toàn bộ sản phẩm thành công' });
     }
 
-    // Fallback in-memory
-    devProductsStore = devProductsStore.filter((p) => Number(p.id) !== id);
-    return NextResponse.json({ success: true, message: 'Xóa sản phẩm thành công' });
+    // 2. Xóa các sản phẩm theo ID (hỗ trợ cả ID số lẫn ID chuỗi)
+    if (db) {
+      for (const id of idsToDelete) {
+        await db.prepare("DELETE FROM products WHERE id = ?").bind(id).run();
+      }
+    }
+
+    devProductsStore = devProductsStore.filter(
+      (p) => !idsToDelete.some((delId) => String(delId) === String(p.id))
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Đã xóa ${idsToDelete.length} sản phẩm thành công`,
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
